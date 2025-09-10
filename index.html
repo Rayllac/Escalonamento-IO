@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Algoritmos de Escalonamento</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+      <h1>Algoritmos de Escalonamento</h1>
+      
+      <div class="controls">
+          <!-- Seção de adicionar processos -->
+          <div class="control-section">
+              <h3>Adicionar Processo</h3>
+              <div class="form-group">
+                  <label for="processName">Nome do Processo:</label>
+                  <input type="text" id="processName" placeholder="P1, P2, P3...">
+              </div>
+              <div class="form-group">
+                  <label for="arrivalTime">Tempo de Chegada:</label>
+                  <input type="number" id="arrivalTime" min="0" value="0">
+              </div>
+              <div class="form-group">
+                  <label for="burstTime">Tempo de CPU:</label>
+                  <input type="number" id="burstTime" min="1" value="1">
+              </div>
+              <div class="form-group">
+                  <label for="priority">Prioridade (menor = maior prioridade):</label>
+                  <input type="number" id="priority" min="1" value="1">
+              </div>
+              <button onclick="app.addProcess()" class="success">Adicionar</button>
+              <button onclick="app.generateRandomProcesses()">Gerar Aleatórios</button>
+              <button onclick="app.clearProcesses()" class="danger">Limpar Todos</button>
+          </div>
+
+          <!-- Seção de configurações -->
+          <div class="control-section">
+              <h3>Configurações de Simulação</h3>
+              <div class="form-group">
+                  <label for="algorithm">Algoritmo:</label>
+                  <select id="algorithm">
+                      <option value="fcfs">SSTF (Shortest Seek Time First)</option>
+                      <option value="sjf">SCAN (Elevator Algorithm)</option>
+                      <option value="priority">C-SCAN (Circular SCAN)</option>
+                  </select>
+              </div>
+              <button onclick="app.runSimulation()" class="success">Executar Simulação</button>
+          </div>
+      </div>
+
+      <!-- Lista de processos -->
+      <div class="process-list" id="processList">
+          <strong>Processos Adicionados:</strong>
+          <div id="processes"></div>
+      </div>
+
+      <!-- Resultados -->
+      <div class="results" id="results">
+          <div class="empty-state">
+              Adicione processos e execute uma simulação para ver os resultados aqui!
+          </div>
+      </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="Process.js"></script>
+  <script src="SchedulingAlgorithms.js"></script>
+  <script src="MetricsCalculator.js"></script>
+  <script src="SchedulerApp.js"></script>
+  <script>
+      const app = new SchedulerApp();
+      window.onload = () => app.generateRandomProcesses();
+  </script>
+</body>
+</html>

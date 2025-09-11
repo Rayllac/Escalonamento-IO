@@ -53,3 +53,10 @@ function exemploAutomatico() {
     atualizarRequisicoes();
     atualizarVisualizacaoDisco();
 }
+
+function limparRequisicoes() {
+    estadoPadrao.requisicoes = [];
+    atualizarRequisicoes();
+    atualizarVisualizacaoDisco();
+    document.getElementById('results').style.display = 'none';
+}

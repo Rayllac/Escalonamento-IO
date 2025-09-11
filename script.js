@@ -38,3 +38,18 @@ function addRequisicao() {
     atualizarRequisicoes();
     atualizarVisualizacaoDisco();
 }
+
+function exemploAutomatico() {
+    const tamanho = parseInt(document.getElementById('diskSize').value);
+    estado.requisicoes = [];
+    const quantidade = Math.floor(Math.random() * 6) + 5;
+    const exemplos = Array.from(
+        { length: quantidade },
+        () => Math.floor(Math.random() * tamanho)
+    );
+
+    estado.requisicoes = exemplos;
+
+    atualizarRequisicoes();
+    atualizarVisualizacaoDisco();
+}

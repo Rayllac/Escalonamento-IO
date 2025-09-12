@@ -32,21 +32,26 @@
                   <input type="number" id="newRequest" placeholder="Ex: 20" min="0" max="99">
                   
               </div>
-                  <button onclick="addRequest()" class="success">Adicionar</button>
-                  <button onclick="generateExample()">Exemplo</button>
-                  <button onclick="clearRequests()" class="danger">Limpar</button>
+                  <button onclick="addRequisicao()" class="success">Adicionar</button>
+                  <button onclick="exemploAutomatico()">Exemplo</button>
+                  <button onclick="limparRequisicoes()" class="danger">Limpar</button>
               <div>
+
+              
               </div>
-    
+          <div class="requests-display" id="requestsDisplay">
+                  <strong>Requisições:</strong> <em>Nenhuma ainda. Adicione algumas!</em>
+          </div>
           </div>
           <div class="control-section">
               <h3>Escolha o Algoritmo</h3>
-              <button onclick="runAlgorithm('sstf')" class="success">SSTF - Mais Próximo</button>
-              <button onclick="runAlgorithm('scan')">SCAN - Elevador</button>
-              <button onclick="runAlgorithm('cscan')">C-SCAN - Circular</button>
+              <button onclick="runAlgoritmo('sstf')" class="success">SSTF - Mais Próximo</button>
+              <button onclick="runAlgoritmo('scan')">SCAN - Elevador</button>
+              <button onclick="runAlgoritmo('cscan')">C-SCAN - Circular</button>
           </div>
       </div>
   </div>
+  <script src="script.js"></script>
 </body>
 </html>
 

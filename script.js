@@ -110,56 +110,90 @@ function runAlgoritmo(tipo) {
   }
 
   if (resultado) {
-    mostrarResultado(resultado);
+    mostrarResultado(resultado, resultado.detalhes);
   }
 }
 
 function algoritmoSSTF(requisicoes, posicaoInicial) {
-  // cópia das requisições para não alterar o original
   let pendentes = [...requisicoes];
-
-  // posição inicial da cabeça
   let posicaoAtual = posicaoInicial;
-
-  // resultado que vamos montar
   let ordemAtendimento = [];
   let movimentoTotal = 0;
+  let detalhes = [];
 
-  console.log(`Cabeça inicia na posição ${posicaoAtual}`);
-  console.log(`Requisições pendentes: [${pendentes.join(", ")}]`);
+  detalhes.push(`Cabeça inicia na posição ${posicaoAtual}`);
+  detalhes.push(`Requisições pendentes: [${pendentes.join(", ")}]`);
 
-  // enquanto houver requisições
   while (pendentes.length > 0) {
-    // encontra a requisição mais próxima
     let maisProxima = pendentes.reduce((maisPerto, req) => {
       let distAtual = Math.abs(req - posicaoAtual);
       let distMaisPerto = Math.abs(maisPerto - posicaoAtual);
       return distAtual < distMaisPerto ? req : maisPerto;
     });
 
-    // calcula deslocamento
     let deslocamento = Math.abs(maisProxima - posicaoAtual);
     movimentoTotal += deslocamento;
 
-    // log no console
-    console.log(
-      `Movendo de ${posicaoAtual} até ${maisProxima} (distância ${deslocamento})`
-    );
+    detalhes.push(`Movendo de ${posicaoAtual} até ${maisProxima} (distância ${deslocamento})`);
 
-    // atualiza estado
     posicaoAtual = maisProxima;
     ordemAtendimento.push(maisProxima);
-
-    // remove a atendida da lista
     pendentes = pendentes.filter(r => r !== maisProxima);
 
-    console.log(`Atendido ${maisProxima}`);
-    console.log(`Pendentes agora: [${pendentes.join(", ")}]`);
+    detalhes.push(`Atendido ${maisProxima}`);
+    detalhes.push(`Pendentes agora: [${pendentes.join(", ")}]`);
   }
 
-  console.log(`Movimento total: ${movimentoTotal}`);
+  detalhes.push(`Movimento total: ${movimentoTotal}`);
 
+  return {
+    nome: "SSTF (Mais Próximo)",
+    explicacao: "Atende sempre a requisição mais próxima da posição atual da cabeça.",
+    sequencia: ordemAtendimento,
+    movimentoTotal,
+    detalhes
+  };
 }
+
+
+function mostrarResultado(resultado, detalhes) {
+  const container = document.getElementById("algoritmoresults");
+  const resultsDiv = document.getElementById("results");
+
+  // Monta bloco HTML
+  container.innerHTML = `
+    <div class="algorithm-result">
+      <div class="algorithm-name">${resultado.nome}</div>
+      <p>${resultado.explicacao}</p>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-value">${resultado.movimentoTotal}</div>
+          <div class="metric-label">Movimento Total</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">${resultado.sequencia.length}</div>
+          <div class="metric-label">Requisições</div>
+        </div>
+      </div>
+
+      <div class="sequence">
+        <div class="sequence-title">Ordem de atendimento:</div>
+        ${resultado.sequencia.map(pos => `<span class="sequence-step">${pos}</span>`).join("")}
+      </div>
+
+      <div class="details">
+        <div class="sequence-title">Passo a passo:</div>
+        <ul>
+          ${detalhes.map(p => `<li>${p}</li>`).join("")}
+        </ul>
+      </div>
+    </div>
+  `;
+
+  resultsDiv.style.display = "block";
+}
+
 
 
 inicializarControles();

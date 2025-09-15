@@ -62,7 +62,6 @@ function limparRequisicoes() {
 }
 
 function inicializarControles() {
-
   const inputReq = document.getElementById('newRequest');
   if (inputReq) {
     inputReq.addEventListener('keypress', e => {
@@ -75,7 +74,7 @@ function inicializarControles() {
     inputTamanho.addEventListener('change', () => {
       estado.tamanho = getTamanho();
       atualizarRequisicoes();
-      atualizarVisualizacaoDisco();
+      if (typeof atualizarVisualizacaoDisco === 'function') atualizarVisualizacaoDisco();
     });
   }
 
@@ -84,14 +83,14 @@ function inicializarControles() {
     inputPos.addEventListener('change', e => {
       const v = parseInt(e.target.value);
       estado.posicaoInicial = Number.isNaN(v) ? 0 : v;
-      atualizarVisualizacaoDisco();
+      if (typeof atualizarVisualizacaoDisco === 'function') atualizarVisualizacaoDisco();
     });
   }
 
-
   atualizarRequisicoes();
-  atualizarVisualizacaoDisco();
+  if (typeof atualizarVisualizacaoDisco === 'function') atualizarVisualizacaoDisco();
 }
+
 
 
 function runAlgoritmo(tipo) {
@@ -102,16 +101,24 @@ function runAlgoritmo(tipo) {
 
   const tamanho = getTamanho();
   const posicaoInicial = estado.posicaoInicial;
-
   let resultado;
 
-  if (tipo === "sstf") {
-    resultado = algoritmoSSTF(estado.requisicoes, posicaoInicial);
+   switch (tipo) {
+    case "sstf":
+      resultado = algoritmoSSTF(estado.requisicoes, posicaoInicial);
+      break;
+    case "scan":
+      resultado = algoritmoSCAN(estado.requisicoes, posicaoInicial, tamanho);
+      break;
+    case "cscan":
+      resultado = algoritmoCSCAN(estado.requisicoes, posicaoInicial, tamanho);
+      break;
+    default:
+      alert("Algoritmo desconhecido.");
+      return;
   }
-
-  if (resultado) {
-    mostrarResultado(resultado, resultado.detalhes);
-  }
+  
+    mostrarResultado(resultado);
 }
 
 function algoritmoSSTF(requisicoes, posicaoInicial) {
@@ -119,11 +126,9 @@ function algoritmoSSTF(requisicoes, posicaoInicial) {
   let posicaoAtual = posicaoInicial;
   let ordemAtendimento = [];
   let movimentoTotal = 0;
-  let detalhes = [];
+  let passos = []; // aqui guardamos cada linha da tabela
 
-  detalhes.push(`Cabeça inicia na posição ${posicaoAtual}`);
-  detalhes.push(`Requisições pendentes: [${pendentes.join(", ")}]`);
-
+  // loop principal
   while (pendentes.length > 0) {
     let maisProxima = pendentes.reduce((maisPerto, req) => {
       let distAtual = Math.abs(req - posicaoAtual);
@@ -134,33 +139,174 @@ function algoritmoSSTF(requisicoes, posicaoInicial) {
     let deslocamento = Math.abs(maisProxima - posicaoAtual);
     movimentoTotal += deslocamento;
 
-    detalhes.push(`Movendo de ${posicaoAtual} até ${maisProxima} (distância ${deslocamento})`);
+    passos.push({
+      de: posicaoAtual,
+      para: maisProxima,
+      distancia: deslocamento,
+      pendentesAntes: [...pendentes],
+      pendentesDepois: pendentes.filter(r => r !== maisProxima)
+    });
 
     posicaoAtual = maisProxima;
     ordemAtendimento.push(maisProxima);
     pendentes = pendentes.filter(r => r !== maisProxima);
-
-    detalhes.push(`Atendido ${maisProxima}`);
-    detalhes.push(`Pendentes agora: [${pendentes.join(", ")}]`);
   }
-
-  detalhes.push(`Movimento total: ${movimentoTotal}`);
 
   return {
     nome: "SSTF (Mais Próximo)",
     explicacao: "Atende sempre a requisição mais próxima da posição atual da cabeça.",
     sequencia: ordemAtendimento,
     movimentoTotal,
-    detalhes
+    passos
+  };
+}
+
+function algoritmoSCAN(requisicoes, posicaoInicial, tamanho) {
+  let pendentes = [...requisicoes].sort((a, b) => a - b);
+  let posicaoAtual = posicaoInicial;
+  let ordemAtendimento = [];
+  let movimentoTotal = 0;
+  let passos = [];
+
+  // dividir entre menores e maiores que a posição inicial
+  let menores = pendentes.filter(r => r < posicaoAtual).sort((a, b) => b - a);
+  let maiores = pendentes.filter(r => r >= posicaoAtual).sort((a, b) => a - b);
+
+  // primeiro vai para o fim (lado crescente)
+  let fila = [...maiores, ...menores];
+
+  fila.forEach(req => {
+    let deslocamento = Math.abs(req - posicaoAtual);
+    movimentoTotal += deslocamento;
+
+    passos.push({
+      de: posicaoAtual,
+      para: req,
+      distancia: deslocamento,
+      pendentesAntes: [...pendentes],
+      pendentesDepois: pendentes.filter(r => r !== req)
+    });
+
+    posicaoAtual = req;
+    ordemAtendimento.push(req);
+    pendentes = pendentes.filter(r => r !== req);
+  });
+
+  return {
+    nome: "SCAN (Elevador)",
+    explicacao: "A cabeça varre em uma direção até o fim, depois inverte o sentido.",
+    sequencia: ordemAtendimento,
+    movimentoTotal,
+    passos
   };
 }
 
 
-function mostrarResultado(resultado, detalhes) {
+function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
+  let pendentes = [...requisicoes].sort((a, b) => a - b);
+  let posicaoAtual = posicaoInicial;
+  let ordemAtendimento = [];
+  let movimentoTotal = 0;
+  let passos = [];
+
+  let maiores = pendentes.filter(r => r >= posicaoAtual).sort((a, b) => a - b);
+  let menores = pendentes.filter(r => r < posicaoAtual).sort((a, b) => a - b);
+
+  // atende maiores primeiro
+  maiores.forEach(req => {
+    let deslocamento = Math.abs(req - posicaoAtual);
+    movimentoTotal += deslocamento;
+
+    passos.push({
+      de: posicaoAtual,
+      para: req,
+      distancia: deslocamento,
+      pendentesAntes: [...pendentes],
+      pendentesDepois: pendentes.filter(r => r !== req)
+    });
+
+    posicaoAtual = req;
+    ordemAtendimento.push(req);
+    pendentes = pendentes.filter(r => r !== req);
+  });
+
+  if (menores.length > 0) {
+    // move até o fim do disco
+    movimentoTotal += (tamanho - 1 - posicaoAtual);
+    passos.push({
+      de: posicaoAtual,
+      para: tamanho - 1,
+      distancia: (tamanho - 1 - posicaoAtual),
+      pendentesAntes: [...pendentes],
+      pendentesDepois: [...pendentes]
+    });
+    posicaoAtual = 0; // volta ao início (movimento de reset)
+
+    // conta também o salto de reset
+    movimentoTotal += (tamanho - 1);
+
+    // atende os menores
+    menores.forEach(req => {
+      let deslocamento = Math.abs(req - posicaoAtual);
+      movimentoTotal += deslocamento;
+
+      passos.push({
+        de: posicaoAtual,
+        para: req,
+        distancia: deslocamento,
+        pendentesAntes: [...pendentes],
+        pendentesDepois: pendentes.filter(r => r !== req)
+      });
+
+      posicaoAtual = req;
+      ordemAtendimento.push(req);
+      pendentes = pendentes.filter(r => r !== req);
+    });
+  }
+
+  return {
+    nome: "C-SCAN (Circular SCAN)",
+    explicacao: "A cabeça só atende em um sentido. Ao chegar no fim, volta ao início sem atender nada.",
+    sequencia: ordemAtendimento,
+    movimentoTotal,
+    passos
+  };
+}
+
+
+
+function mostrarResultado(resultado) {
   const container = document.getElementById("algoritmoresults");
   const resultsDiv = document.getElementById("results");
 
-  // Monta bloco HTML
+  let tabelaPassos = `
+    <table class="steps-table">
+      <thead>
+        <tr>
+          <th>Posição Atual</th>
+          <th>Requisição Escolhida</th>
+          <th>Distância</th>
+          <th>Pendentes Antes</th>
+          <th>Pendentes Depois</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  resultado.passos.forEach(p => {
+    tabelaPassos += `
+      <tr>
+        <td>${p.de}</td>
+        <td>${p.para}</td>
+        <td>${p.distancia}</td>
+        <td>[${p.pendentesAntes.join(", ")}]</td>
+        <td>[${p.pendentesDepois.join(", ")}]</td>
+      </tr>
+    `;
+  });
+
+  tabelaPassos += `</tbody></table>`;
+
   container.innerHTML = `
     <div class="algorithm-result">
       <div class="algorithm-name">${resultado.nome}</div>
@@ -184,9 +330,7 @@ function mostrarResultado(resultado, detalhes) {
 
       <div class="details">
         <div class="sequence-title">Passo a passo:</div>
-        <ul>
-          ${detalhes.map(p => `<li>${p}</li>`).join("")}
-        </ul>
+        ${tabelaPassos}
       </div>
     </div>
   `;

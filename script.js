@@ -1,13 +1,13 @@
 let estado = {
-    tamanho: 100,
-    posicaoInicial: 50,
+    tamanho: 50,
+    posicaoInicial: 25,
     requisicoes: [],
     simulacaoAtiva: false
 };
 
 function getTamanho() {
   const v = parseInt(document.getElementById('diskSize').value);
-  return Number.isNaN(v) ? 100 : Math.max(1, v);
+  return Number.isNaN(v) ? 50 : Math.max(1, v);
 }
 
 function atualizarRequisicoes() {
@@ -59,6 +59,14 @@ function limparRequisicoes() {
     atualizarRequisicoes();
     const results = document.getElementById('results');
     if (results) results.style.display = 'none';
+
+    const viz = document.querySelector(".disk-visualization");
+    if (viz) {
+      viz.innerHTML = `
+        <div id="diskLine"></div>
+        <div id="head"></div>
+      `;
+    }
 }
 
 function inicializarControles() {
@@ -273,8 +281,6 @@ function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
   };
 }
 
-
-
 function mostrarResultado(resultado) {
   const container = document.getElementById("algoritmoresults");
   const resultsDiv = document.getElementById("results");
@@ -336,7 +342,51 @@ function mostrarResultado(resultado) {
   `;
 
   resultsDiv.style.display = "block";
+
+  animarAlgoritmo(resultado);
 }
+
+
+function animarAlgoritmo(resultado) {
+
+  const tamanho = getTamanho();
+  const viz = document.querySelector(".disk-visualization");
+
+  viz.innerHTML = `
+    <div id="diskLine"></div>
+    <div id="head"></div>
+  `;
+
+  const line = viz.getBoundingClientRect();
+
+  viz.querySelectorAll(".request-dot").forEach(el => el.remove());
+
+  resultado.sequencia.forEach(req => {
+    const label = document.createElement("div");
+  label.className = "request-label";
+  label.style.left = `${(req / tamanho) * line.width}px`;
+  label.textContent = req; // mostra o número da requisição
+  viz.appendChild(label);
+  });
+
+
+  const head = document.getElementById("head");
+  let i = 0;
+
+  function mover() {
+    if (i >= resultado.sequencia.length) return;
+    const pos = resultado.sequencia[i];
+
+    head.style.left = `${(pos / tamanho) * line.width}px`; 
+
+    i++;
+    setTimeout(mover, 1000); 
+  }
+
+  mover();
+}
+
+
 
 
 

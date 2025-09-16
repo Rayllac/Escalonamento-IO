@@ -1,0 +1,178 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f8f9fa;
+  color: #333;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 30px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.control-section {
+  background: #f1f3f5;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  margin: 4px 2px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button.sucess {
+  background: #194987;
+  color: #fff;
+}
+
+.requests-display {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.request-tag {
+  display: inline-block;
+  margin: 2px;
+  padding: 4px 6px;
+  background: #0d6efd;
+  color: white;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.results {
+  grid-column: span 2;
+  margin-top: 20px;
+}
+
+.steps-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.steps-table th,
+.steps-table td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: center;
+}
+
+.steps-table th {
+  background: #e9ecef;
+}
+
+.sequence {
+  margin: 15px 0;
+}
+
+.sequence-step {
+  display: inline-block;
+  background: #6c757d;
+  color: #fff;
+  margin: 3px;
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+
+@media (max-width: 768px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .results {
+    grid-column: span 1; 
+  }
+}
+
+
+.algorithm-result {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-top: 15px;
+}
+
+.algorithm-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.algorithm-result p {
+  margin: 0 0 15px 0;
+  color: #555;
+}
+
+.metrics {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 15px;
+}
+
+.metric {
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 22px;
+  font-weight: bold;
+  color: #0d6efd;
+}
+
+.metric-label {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}

@@ -241,7 +241,6 @@ function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
   const maiores = pendentes.filter(r => r >= posicaoAtual).sort((a, b) => a - b);
   const menores = pendentes.filter(r => r < posicaoAtual).sort((a, b) => a - b);
 
-
   for (let req of maiores) {
     let deslocamento = Math.abs(req - posicaoAtual);
     movimentoTotal += deslocamento;
@@ -259,13 +258,31 @@ function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
     pendentes = pendentes.filter(r => r !== req);
   }
 
+
   if (menores.length > 0) {
+ 
+    if (posicaoAtual !== tamanho - 1) {
+      let deslocamento = (tamanho - 1 - posicaoAtual);
+      movimentoTotal += deslocamento;
+      passos.push({
+        de: posicaoAtual,
+        para: tamanho - 1,
+        distancia: deslocamento,
+        pendentesAntes: [...pendentes],
+        pendentesDepois: [...pendentes]  
+      });
+      posicaoAtual = tamanho - 1;
+    }
 
-    movimentoTotal += (tamanho - 1 - posicaoAtual);
-    passos.push({ de: posicaoAtual, para: tamanho - 1, distancia: tamanho - 1 - posicaoAtual });
-    posicaoAtual = 0;
     movimentoTotal += (tamanho - 1);
-
+    passos.push({
+      de: posicaoAtual,
+      para: 0,
+      distancia: (tamanho - 1),
+      pendentesAntes: [...pendentes],   
+      pendentesDepois: [...pendentes]  
+    });
+    posicaoAtual = 0;
 
     for (let req of menores) {
       let deslocamento = Math.abs(req - posicaoAtual);

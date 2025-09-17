@@ -1,6 +1,8 @@
+
+
 let estado = {
-    tamanho: 50,
-    posicaoInicial: 25,
+    tamanho: 50, 
+    posicaoInicial: 25, 
     requisicoes: [],
 };
 
@@ -12,16 +14,6 @@ function getTamanho() {
   return Math.max(1, v);
 }
 
-function atualizarRequisicoes() {
-  const display = document.getElementById('requestsDisplay');
-
-  if (estado.requisicoes.length === 0) {
-    display.innerHTML = '<strong>Requisições:</strong> <em>Nenhuma ainda. Adicione algumas!</em>';
-  } else {
-    const tags = estado.requisicoes.map(req => `<span class="request-tag">${req}</span>`).join(' ');
-    display.innerHTML = `<strong>Requisições:</strong> ${tags}`;
-  }
-}
 
 function addRequisicao() {
   const input = document.getElementById('newRequest');
@@ -59,6 +51,28 @@ function exemploAutomatico() {
 
   estado.requisicoes = Array.from(numeros);
   atualizarRequisicoes();
+}
+
+function atualizarRequisicoes() {
+  const display = document.getElementById('requestsDisplay');
+
+  if (estado.requisicoes.length === 0) {
+    display.innerHTML = '<strong>Requisições:</strong> <em>Nenhuma ainda. Adicione algumas!</em>';
+  } else {
+
+    let tags = [];
+
+    for (let req of estado.requisicoes) {
+
+      let tagHTML = "<span class='request-tag'>" + req + "</span>";
+
+      tags.push(tagHTML);
+    }
+
+    let tagsProntas = tags.join(" ");
+
+    display.innerHTML = "<strong>Requisições:</strong> " + tagsProntas;
+  }
 }
 
 function limparRequisicoes() {
@@ -227,7 +241,7 @@ function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
   const maiores = pendentes.filter(r => r >= posicaoAtual).sort((a, b) => a - b);
   const menores = pendentes.filter(r => r < posicaoAtual).sort((a, b) => a - b);
 
-  // atende os maiores
+
   for (let req of maiores) {
     let deslocamento = Math.abs(req - posicaoAtual);
     movimentoTotal += deslocamento;
@@ -246,13 +260,13 @@ function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
   }
 
   if (menores.length > 0) {
-    // vai até o fim do disco
+
     movimentoTotal += (tamanho - 1 - posicaoAtual);
     passos.push({ de: posicaoAtual, para: tamanho - 1, distancia: tamanho - 1 - posicaoAtual });
     posicaoAtual = 0;
     movimentoTotal += (tamanho - 1);
 
-    // atende os menores
+
     for (let req of menores) {
       let deslocamento = Math.abs(req - posicaoAtual);
       movimentoTotal += deslocamento;
@@ -284,7 +298,7 @@ function mostrarResultado(resultado) {
   const container = document.getElementById('algoritmoresults');
   const resultsDiv = document.getElementById('results');
 
-  // tabela com os passos
+
   let tabelaPassos = `
     <table class="steps-table">
       <thead>
@@ -347,11 +361,9 @@ function animarAlgoritmo(resultado) {
   const tamanho = getTamanho();
   const viz = document.querySelector('.disk-visualization');
 
-  // limpar régua
   viz.innerHTML = `<div id="diskLine"></div><div id="head"></div>`;
   const line = viz.getBoundingClientRect();
 
-  // mostrar labels das requisições
   for (let req of resultado.sequencia) {
     const label = document.createElement('div');
     label.className = 'request-label';
@@ -360,7 +372,6 @@ function animarAlgoritmo(resultado) {
     viz.appendChild(label);
   }
 
-  // mover cabeça
   const head = document.getElementById('head');
   let i = 0;
 

@@ -2,7 +2,6 @@ let estado = {
     tamanho: 50,
     posicaoInicial: 25,
     requisicoes: [],
-    simulacaoAtiva: false
 };
 
 function getTamanho() {
@@ -51,7 +50,14 @@ function addRequisicao() {
 
 function exemploAutomatico() {
   const tamanho = getTamanho();
-  estado.requisicoes = Array.from({ length: 5 }, () => Math.floor(Math.random() * tamanho));
+  const quantidade = 5;
+  const numeros = new Set();
+
+  while (numeros.size < quantidade) {
+    numeros.add(Math.floor(Math.random() * tamanho));
+  }
+
+  estado.requisicoes = Array.from(numeros);
   atualizarRequisicoes();
 }
 
@@ -92,7 +98,12 @@ function inicializarControles() {
   if (inputPos) {
     inputPos.addEventListener('change', e => {
       const v = parseInt(e.target.value);
-      estado.posicaoInicial = Number.isNaN(v) ? 0 : v;
+      estado.posicaoInicial = null;
+      if (Number.isNaN(v)) {                 
+        estado.posicaoInicial = 0;           
+      } else {                               
+        estado.posicaoInicial = v;           
+      }
     });
   }
 

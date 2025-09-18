@@ -88,6 +88,11 @@ function limparRequisicoes() {
   const head = document.getElementById('head');
   const line = viz.getBoundingClientRect();
   head.style.left = `${(estado.posicaoInicial / estado.tamanho) * line.width}px`;
+
+  const inputFile = document.getElementById('fileInput');
+  if (inputFile) {
+    inputFile.value = '';
+  }
 }
 
 function inicializarControles() {
@@ -119,6 +124,11 @@ function inicializarControles() {
         estado.posicaoInicial = v;           
       }
     });
+  }
+
+  const inputFile = document.getElementById('fileInput');
+  if (inputFile) {
+    inputFile.addEventListener('change', carregarDeArquivo);
   }
 
   atualizarRequisicoes();
@@ -402,6 +412,49 @@ function animarAlgoritmo(resultado) {
 
   mover();
 }
+
+function carregarDeArquivo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const linhas = e.target.result.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+
+    let tamanho = null;
+    let cabeca = null;
+    let requisicoes = [];
+
+    for (let linha of linhas) {
+      if (linha.startsWith("tamanho=")) {
+        tamanho = parseInt(linha.split("=")[1]);
+      } else if (linha.startsWith("cabeca=")) {
+        cabeca = parseInt(linha.split("=")[1]);
+      } else if (linha.startsWith("requisicoes=")) {
+        requisicoes = linha.split("=")[1].split(",").map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+      }
+    }
+
+    if (tamanho !== null) {
+      estado.tamanho = tamanho;
+      document.getElementById("diskSize").value = tamanho;
+    }
+
+    if (cabeca !== null) {
+      estado.posicaoInicial = cabeca;
+      document.getElementById("initialPosition").value = cabeca;
+    }
+
+    if (requisicoes.length > 0) {
+      estado.requisicoes = requisicoes;
+    }
+
+    atualizarRequisicoes();
+  };
+
+  reader.readAsText(file);
+}
+
 
 inicializarControles();
 

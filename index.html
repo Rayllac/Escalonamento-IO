@@ -37,8 +37,14 @@
                   <button onclick="limparRequisicoes()" class="sucess">Limpar</button>
               <div>
 
-              
+              <div class="form-group">
+                  <label for="fileInput">Carregar arquivo TXT:</label>
+                  <input type="file" id="fileInput" accept=".txt">
+              <small style="color:#999; font-size:11px;">
+                Ex.: tamanho=100 | cabeca=30 | requisicoes=10, 20, 30
+              </small>
               </div>
+            </div>
           <div class="requests-display" id="requestsDisplay">
                   <strong>Requisições:</strong> <em>Nenhuma ainda. Adicione algumas!</em>
           </div>

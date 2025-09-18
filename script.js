@@ -1,19 +1,13 @@
-
-
 let estado = {
-    tamanho: 50, 
-    posicaoInicial: 25, 
-    requisicoes: [],
+  tamanho: 50,
+  posicaoInicial: 25,
+  requisicoes: [],
 };
 
 function getTamanho() {
   const v = parseInt(document.getElementById('diskSize').value);
-  if (Number.isNaN(v)) {
-    return 50;
-  }
-  return Math.max(1, v);
+  return Number.isNaN(v) ? 50 : Math.max(1, v);
 }
-
 
 function addRequisicao() {
   const input = document.getElementById('newRequest');
@@ -24,12 +18,10 @@ function addRequisicao() {
     alert('Digite um número válido!');
     return;
   }
-
   if (valor < 0 || valor >= tamanho) {
     alert(`O número deve estar entre 0 e ${tamanho - 1}!`);
     return;
   }
-
   if (estado.requisicoes.includes(valor)) {
     alert('Esta posição já existe na lista!');
     return;
@@ -59,19 +51,8 @@ function atualizarRequisicoes() {
   if (estado.requisicoes.length === 0) {
     display.innerHTML = '<strong>Requisições:</strong> <em>Nenhuma ainda. Adicione algumas!</em>';
   } else {
-
-    let tags = [];
-
-    for (let req of estado.requisicoes) {
-
-      let tagHTML = "<span class='request-tag'>" + req + "</span>";
-
-      tags.push(tagHTML);
-    }
-
-    let tagsProntas = tags.join(" ");
-
-    display.innerHTML = "<strong>Requisições:</strong> " + tagsProntas;
+    const tags = estado.requisicoes.map(req => `<span class='request-tag'>${req}</span>`);
+    display.innerHTML = "<strong>Requisições:</strong> " + tags.join(" ");
   }
 }
 
@@ -79,8 +60,7 @@ function limparRequisicoes() {
   estado.requisicoes = [];
   atualizarRequisicoes();
 
-  const results = document.getElementById('results');
-  results.style.display = 'none';
+  document.getElementById('results').style.display = 'none';
 
   const viz = document.querySelector('.disk-visualization');
   viz.innerHTML = `<div id="diskLine"></div><div id="head"></div>`;
@@ -90,18 +70,14 @@ function limparRequisicoes() {
   head.style.left = `${(estado.posicaoInicial / estado.tamanho) * line.width}px`;
 
   const inputFile = document.getElementById('fileInput');
-  if (inputFile) {
-    inputFile.value = '';
-  }
+  if (inputFile) inputFile.value = '';
 }
 
 function inicializarControles() {
   const inputReq = document.getElementById('newRequest');
   if (inputReq) {
     inputReq.addEventListener('keypress', e => {
-      if (e.key === 'Enter') {
-        addRequisicao();
-      }
+      if (e.key === 'Enter') addRequisicao();
     });
   }
 
@@ -117,19 +93,12 @@ function inicializarControles() {
   if (inputPos) {
     inputPos.addEventListener('change', e => {
       const v = parseInt(e.target.value);
-      estado.posicaoInicial = null;
-      if (Number.isNaN(v)) {                 
-        estado.posicaoInicial = 0;           
-      } else {                               
-        estado.posicaoInicial = v;           
-      }
+      estado.posicaoInicial = Number.isNaN(v) ? 0 : v;
     });
   }
 
   const inputFile = document.getElementById('fileInput');
-  if (inputFile) {
-    inputFile.addEventListener('change', carregarDeArquivo);
-  }
+  if (inputFile) inputFile.addEventListener('change', carregarDeArquivo);
 
   atualizarRequisicoes();
 }
@@ -148,15 +117,12 @@ function runAlgoritmo(tipo) {
     case 'sstf':
       resultado = algoritmoSSTF(estado.requisicoes, posicaoInicial);
       break;
-
     case 'scan':
       resultado = algoritmoSCAN(estado.requisicoes, posicaoInicial, tamanho);
       break;
-
     case 'cscan':
       resultado = algoritmoCSCAN(estado.requisicoes, posicaoInicial, tamanho);
       break;
-
     default:
       alert('Algoritmo desconhecido.');
       return;
@@ -172,12 +138,9 @@ function algoritmoSSTF(requisicoes, posicaoInicial) {
   let passos = [];
 
   while (pendentes.length > 0) {
-    let maisProxima = pendentes[0];
-    for (let req of pendentes) {
-      if (Math.abs(req - posicaoAtual) < Math.abs(maisProxima - posicaoAtual)) {
-        maisProxima = req;
-      }
-    }
+    let maisProxima = pendentes.reduce((a, b) =>
+      Math.abs(a - posicaoAtual) < Math.abs(b - posicaoAtual) ? a : b
+    );
 
     let deslocamento = Math.abs(maisProxima - posicaoAtual);
     movimentoTotal += deslocamento;
@@ -195,13 +158,7 @@ function algoritmoSSTF(requisicoes, posicaoInicial) {
     pendentes = pendentes.filter(r => r !== maisProxima);
   }
 
-  return {
-    nome: 'SSTF (Mais Próximo)',
-    explicacao: 'Atende sempre a requisição mais próxima da posição atual da cabeça.',
-    sequencia: ordemAtendimento,
-    movimentoTotal,
-    passos
-  };
+  return { nome: 'SSTF (Mais Próximo)', explicacao: 'Atende sempre a requisição mais próxima.', sequencia: ordemAtendimento, movimentoTotal, passos };
 }
 
 function algoritmoSCAN(requisicoes, posicaoInicial, tamanho) {
@@ -232,13 +189,7 @@ function algoritmoSCAN(requisicoes, posicaoInicial, tamanho) {
     pendentes = pendentes.filter(r => r !== req);
   }
 
-  return {
-    nome: 'SCAN (Elevador)',
-    explicacao: 'A cabeça varre em uma direção até o fim, depois inverte o sentido.',
-    sequencia: ordemAtendimento,
-    movimentoTotal,
-    passos
-  };
+  return { nome: 'SCAN (Elevador)', explicacao: 'Varre em uma direção até o fim, depois inverte.', sequencia: ordemAtendimento, movimentoTotal, passos };
 }
 
 function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
@@ -254,104 +205,59 @@ function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
   for (let req of maiores) {
     let deslocamento = Math.abs(req - posicaoAtual);
     movimentoTotal += deslocamento;
-
     passos.push({
-      de: posicaoAtual,
-      para: req,
-      distancia: deslocamento,
-      pendentesAntes: [...pendentes],
-      pendentesDepois: pendentes.filter(r => r !== req)
+      de: posicaoAtual, para: req, distancia: deslocamento,
+      pendentesAntes: [...pendentes], pendentesDepois: pendentes.filter(r => r !== req)
     });
-
     posicaoAtual = req;
     ordemAtendimento.push(req);
     pendentes = pendentes.filter(r => r !== req);
   }
 
-
   if (menores.length > 0) {
- 
     if (posicaoAtual !== tamanho - 1) {
-      let deslocamento = (tamanho - 1 - posicaoAtual);
-      movimentoTotal += deslocamento;
-      passos.push({
-        de: posicaoAtual,
-        para: tamanho - 1,
-        distancia: deslocamento,
-        pendentesAntes: [...pendentes],
-        pendentesDepois: [...pendentes]  
-      });
+      movimentoTotal += (tamanho - 1 - posicaoAtual);
+      passos.push({ de: posicaoAtual, para: tamanho - 1, distancia: tamanho - 1 - posicaoAtual, pendentesAntes: [...pendentes], pendentesDepois: [...pendentes] });
       posicaoAtual = tamanho - 1;
     }
-
     movimentoTotal += (tamanho - 1);
-    passos.push({
-      de: posicaoAtual,
-      para: 0,
-      distancia: (tamanho - 1),
-      pendentesAntes: [...pendentes],   
-      pendentesDepois: [...pendentes]  
-    });
+    passos.push({ de: posicaoAtual, para: 0, distancia: (tamanho - 1), pendentesAntes: [...pendentes], pendentesDepois: [...pendentes] });
     posicaoAtual = 0;
 
     for (let req of menores) {
       let deslocamento = Math.abs(req - posicaoAtual);
       movimentoTotal += deslocamento;
-
       passos.push({
-        de: posicaoAtual,
-        para: req,
-        distancia: deslocamento,
-        pendentesAntes: [...pendentes],
-        pendentesDepois: pendentes.filter(r => r !== req)
+        de: posicaoAtual, para: req, distancia: deslocamento,
+        pendentesAntes: [...pendentes], pendentesDepois: pendentes.filter(r => r !== req)
       });
-
       posicaoAtual = req;
       ordemAtendimento.push(req);
       pendentes = pendentes.filter(r => r !== req);
     }
   }
 
-  return {
-    nome: 'C-SCAN (Circular SCAN)',
-    explicacao: 'A cabeça só atende em um sentido. Ao chegar no fim, volta ao início sem atender nada.',
-    sequencia: ordemAtendimento,
-    movimentoTotal,
-    passos
-  };
+  return { nome: 'C-SCAN (Circular SCAN)', explicacao: 'Atende em um sentido; ao fim, volta ao início sem atender.', sequencia: ordemAtendimento, movimentoTotal, passos };
 }
 
 function mostrarResultado(resultado) {
   const container = document.getElementById('algoritmoresults');
   const resultsDiv = document.getElementById('results');
 
-
   let tabelaPassos = `
     <table class="steps-table">
       <thead>
         <tr>
-          <th>Posição Atual</th>
-          <th>Requisição Escolhida</th>
-          <th>Distância</th>
-          <th>Pendentes Antes</th>
-          <th>Pendentes Depois</th>
+          <th>Posição Atual</th><th>Requisição Escolhida</th><th>Distância</th><th>Pendentes Antes</th><th>Pendentes Depois</th>
         </tr>
-      </thead>
-      <tbody>
+      </thead><tbody>
   `;
-
   for (let p of resultado.passos) {
-    tabelaPassos += `
-      <tr>
-        <td>${p.de}</td>
-        <td>${p.para ?? '-'}</td>
-        <td>${p.distancia ?? '-'}</td>
-        <td>[${(p.pendentesAntes || []).join(', ')}]</td>
-        <td>[${(p.pendentesDepois || []).join(', ')}]</td>
-      </tr>
-    `;
+    tabelaPassos += `<tr>
+      <td>${p.de}</td><td>${p.para ?? '-'}</td><td>${p.distancia ?? '-'}</td>
+      <td>[${(p.pendentesAntes || []).join(', ')}]</td>
+      <td>[${(p.pendentesDepois || []).join(', ')}]</td></tr>`;
   }
-
   tabelaPassos += `</tbody></table>`;
 
   container.innerHTML = `
@@ -359,49 +265,32 @@ function mostrarResultado(resultado) {
       <div class="algorithm-name">${resultado.nome}</div>
       <p>${resultado.explicacao}</p>
       <div class="metrics">
-        <div class="metric">
-          <div class="metric-value">${resultado.movimentoTotal}</div>
-          <div class="metric-label">Movimento Total</div>
-        </div>
-        <div class="metric">
-          <div class="metric-value">${resultado.sequencia.length}</div>
-          <div class="metric-label">Requisições</div>
-        </div>
+        <div class="metric"><div class="metric-value">${resultado.movimentoTotal}</div><div class="metric-label">Movimento Total</div></div>
+        <div class="metric"><div class="metric-value">${resultado.sequencia.length}</div><div class="metric-label">Requisições</div></div>
       </div>
-      <div class="sequence">
-        <div class="sequence-title">Ordem de atendimento:</div>
-        ${resultado.sequencia.map(pos => `<span class="sequence-step">${pos}</span>`).join('')}
-      </div>
-      <div class="details">
-        <div class="sequence-title">Passo a passo:</div>
-        ${tabelaPassos}
-      </div>
-    </div>
-  `;
-
+      <div class="sequence"><div class="sequence-title">Ordem de atendimento:</div>${resultado.sequencia.map(pos => `<span class="sequence-step">${pos}</span>`).join('')}</div>
+      <div class="details"><div class="sequence-title">Passo a passo:</div>${tabelaPassos}</div>
+    </div>`;
   resultsDiv.style.display = 'block';
   animarAlgoritmo(resultado);
 }
 
-
 function animarAlgoritmo(resultado) {
   const tamanho = getTamanho();
   const viz = document.querySelector('.disk-visualization');
-
   viz.innerHTML = `<div id="diskLine"></div><div id="head"></div>`;
   const line = viz.getBoundingClientRect();
 
-  for (let req of resultado.sequencia) {
+  resultado.sequencia.forEach(req => {
     const label = document.createElement('div');
     label.className = 'request-label';
     label.style.left = `${(req / tamanho) * line.width}px`;
     label.textContent = req;
     viz.appendChild(label);
-  }
+  });
 
   const head = document.getElementById('head');
   let i = 0;
-
   function mover() {
     if (i >= resultado.sequencia.length) return;
     const pos = resultado.sequencia[i];
@@ -409,49 +298,35 @@ function animarAlgoritmo(resultado) {
     i++;
     setTimeout(mover, 1000);
   }
-
   mover();
 }
 
 function carregarDeArquivo(event) {
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = function(e) {
     const linhas = e.target.result.split(/\r?\n/).map(l => l.trim()).filter(l => l);
-
-    let tamanho = null;
-    let cabeca = null;
-    let requisicoes = [];
+    let tamanho = null, cabeca = null, requisicoes = [];
 
     for (let linha of linhas) {
-      if (linha.startsWith("tamanho=")) {
-        tamanho = parseInt(linha.split("=")[1]);
-      } else if (linha.startsWith("cabeca=")) {
-        cabeca = parseInt(linha.split("=")[1]);
-      } else if (linha.startsWith("requisicoes=")) {
-        requisicoes = linha.split("=")[1].split(",").map(v => parseInt(v.trim())).filter(v => !isNaN(v));
-      }
+      if (linha.startsWith("tamanho=")) tamanho = parseInt(linha.split("=")[1]);
+      else if (linha.startsWith("cabeca=")) cabeca = parseInt(linha.split("=")[1]);
+      else if (linha.startsWith("requisicoes=")) requisicoes = linha.split("=")[1].split(",").map(v => parseInt(v.trim())).filter(v => !isNaN(v));
     }
 
     if (tamanho !== null) {
       estado.tamanho = tamanho;
       document.getElementById("diskSize").value = tamanho;
     }
-
     if (cabeca !== null) {
       estado.posicaoInicial = cabeca;
       document.getElementById("initialPosition").value = cabeca;
     }
-
-    if (requisicoes.length > 0) {
-      estado.requisicoes = requisicoes;
-    }
+    if (requisicoes.length > 0) estado.requisicoes = requisicoes;
 
     atualizarRequisicoes();
   };
-
   reader.readAsText(file);
 }
 
@@ -472,109 +347,41 @@ function compararAlgoritmos() {
   mostrarVisualComparacao(resultados, tamanho);
 }
 
-
 function mostrarComparacao(resultados, melhor) {
   const container = document.getElementById('algoritmoresults');
   const resultsDiv = document.getElementById('results');
 
   let tabela = `
     <table class="steps-table">
-      <thead>
-        <tr>
-          <th>Algoritmo</th>
-          <th>Movimento Total</th>
-          <th>Requisições Atendidas</th>
-          <th>Ordem</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="${melhor.nome === resultados.sstf.nome ? 'background:#d4edda;' : ''}">
-          <td>${resultados.sstf.nome}</td>
-          <td>${resultados.sstf.movimentoTotal}</td>
-          <td>${resultados.sstf.sequencia.length}</td>
-          <td>${resultados.sstf.sequencia.join(' → ')}</td>
-        </tr>
-        <tr style="${melhor.nome === resultados.scan.nome ? 'background:#d4edda;' : ''}">
-          <td>${resultados.scan.nome}</td>
-          <td>${resultados.scan.movimentoTotal}</td>
-          <td>${resultados.scan.sequencia.length}</td>
-          <td>${resultados.scan.sequencia.join(' → ')}</td>
-        </tr>
-        <tr style="${melhor.nome === resultados.cscan.nome ? 'background:#d4edda;' : ''}">
-          <td>${resultados.cscan.nome}</td>
-          <td>${resultados.cscan.movimentoTotal}</td>
-          <td>${resultados.cscan.sequencia.length}</td>
-          <td>${resultados.cscan.sequencia.join(' → ')}</td>
-        </tr>
-      </tbody>
-    </table>
-    <p><strong>✅ Melhor algoritmo:</strong> ${melhor.nome} (Menor movimento total)</p>
+      <thead><tr><th>Algoritmo</th><th>Movimento Total</th><th>Requisições</th><th>Ordem</th></tr></thead><tbody>
+      ${Object.values(resultados).map(r => `
+        <tr style="${melhor.nome === r.nome ? 'background:#d4edda;' : ''}">
+          <td>${r.nome}</td><td>${r.movimentoTotal}</td><td>${r.sequencia.length}</td><td>${r.sequencia.join(' → ')}</td>
+        </tr>`).join('')}
+      </tbody></table>
+      <p><strong>✅ Melhor algoritmo:</strong> ${melhor.nome}</p>
   `;
-
   container.innerHTML = tabela;
   resultsDiv.style.display = 'block';
 }
 
 function mostrarVisualComparacao(resultados, tamanho) {
   const viz = document.querySelector('.disk-visualization');
-
-  // recria área com 3 réguas iguais às usadas no animarAlgoritmo
   viz.innerHTML = `
-    <div class="compare-row">
-      <div class="alg-label">SSTF</div>
-      <div class="diskLineWrapper">
-        <div class="diskLine"></div>
-        <div class="head" id="head-sstf"></div>
-      </div>
-    </div>
-    <div class="compare-row">
-      <div class="alg-label">SCAN</div>
-      <div class="diskLineWrapper">
-        <div class="diskLine"></div>
-        <div class="head" id="head-scan"></div>
-      </div>
-    </div>
-    <div class="compare-row">
-      <div class="alg-label">C-SCAN</div>
-      <div class="diskLineWrapper">
-        <div class="diskLine"></div>
-        <div class="head" id="head-cscan"></div>
-      </div>
-    </div>
+    <div class="compare-row"><div class="alg-label">SSTF</div><div class="diskLineWrapper"><div class="diskLine"></div><div class="head" id="head-sstf"></div></div></div>
+    <div class="compare-row"><div class="alg-label">SCAN</div><div class="diskLineWrapper"><div class="diskLine"></div><div class="head" id="head-scan"></div></div></div>
+    <div class="compare-row"><div class="alg-label">C-SCAN</div><div class="diskLineWrapper"><div class="diskLine"></div><div class="head" id="head-cscan"></div></div></div>
   `;
-
-  // desenhar e animar cada algoritmo usando o mesmo estilo já existente
   desenharSequencia(resultados.sstf.sequencia, "head-sstf", tamanho);
   desenharSequencia(resultados.scan.sequencia, "head-scan", tamanho);
   desenharSequencia(resultados.cscan.sequencia, "head-cscan", tamanho);
 }
 
-
-function animarHead(sequencia, headId, lineId, tamanho) {
-  const line = document.getElementById(lineId);
-  const largura = line.offsetWidth;
-  const head = document.getElementById(headId);
-
-  let i = 0;
-  head.style.left = "0px"; // começa do início
-
-  function mover() {
-    if (i >= sequencia.length) return;
-    const pos = sequencia[i];
-    head.style.left = `${(pos / tamanho) * largura}px`;
-    i++;
-    setTimeout(mover, 800); // 800ms por movimento
-  }
-
-  mover();
-}
-
 function desenharSequencia(sequencia, headId, tamanho) {
   const head = document.getElementById(headId);
-  const wrapper = head.parentElement; // pega o .diskLineWrapper
+  const wrapper = head.parentElement;
   const line = wrapper.getBoundingClientRect();
 
-  // desenhar labels das requisições
   sequencia.forEach(req => {
     const label = document.createElement("div");
     label.className = "request-label";
@@ -583,7 +390,6 @@ function desenharSequencia(sequencia, headId, tamanho) {
     wrapper.appendChild(label);
   });
 
-  // animação do cabeçote
   let i = 0;
   function mover() {
     if (i >= sequencia.length) return;
@@ -595,8 +401,4 @@ function desenharSequencia(sequencia, headId, tamanho) {
   mover();
 }
 
-
-
-
 inicializarControles();
-

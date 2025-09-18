@@ -124,17 +124,14 @@ button.sucess {
   border-radius: 3px;
 }
 
-
 @media (max-width: 768px) {
   .controls {
     grid-template-columns: 1fr;
   }
-
   .results {
-    grid-column: span 1; 
+    grid-column: span 1;
   }
 }
-
 
 .algorithm-result {
   background: #f8f9fa;
@@ -177,135 +174,15 @@ button.sucess {
   margin-top: 4px;
 }
 
-
+/* Visualização única */
 .disk-visualization {
   position: relative;
   height: 60px;
-  margin-top: 60px;  
+  margin-top: 60px;
   margin-bottom: 20px;
 }
 
-#diskLine {
-  position: absolute;
-  top: 30px;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: #333;
-}
-
-.request-dot {
-  position: absolute;
-  top: 20px;
-  min-width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: red;
-  color: #fff;
-  font-size: 12px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateX(-50%);
-}
-
-
-#head {
-  position: absolute;
-  top: 10px;
-  width: 20px;
-  height: 20px;
-  background: blue;
-  border-radius: 50%;
-  transform: translateX(-50%);
-  transition: left 0.5s ease; 
-}
-
-.request-label {
-  position: absolute;
-  top: 40px; /* 👈 fica abaixo da linha */
-  font-size: 12px;
-  font-weight: bold;
-  color: red;
-  transform: translateX(-50%);
-}
-
-
-.viz-row {
-  position: relative;
-  margin: 20px 0;
-  height: 40px;
-}
-
-.viz-label {
-  position: absolute;
-  left: -60px;
-  top: 10px;
-  font-weight: bold;
-  width: 50px;
-  text-align: right;
-}
-
-.viz-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 20px;
-  height: 4px;
-  background: #333;
-  border-radius: 2px;
-}
-
-.request-dot {
-  position: absolute;
-  top: 5px;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #0d6efd;
-  color: #fff;
-  font-size: 11px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateX(-50%);
-}
-
-
-.head {
-  position: absolute;
-  top: -5px;
-  width: 18px;
-  height: 18px;
-  background: red;
-  border-radius: 50%;
-  transform: translateX(-50%);
-  transition: left 0.6s ease;
-}
-
-
-
-.compare-row {
-  margin: 40px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.alg-label {
-  font-weight: bold;
-  width: 60px;
-  text-align: right;
-}
-
-.diskLineWrapper {
-  position: relative;
-  flex: 1;
-  height: 60px;
-}
-
+#diskLine,
 .diskLine {
   position: absolute;
   top: 30px;
@@ -315,6 +192,7 @@ button.sucess {
   background: #333;
 }
 
+#head,
 .head {
   position: absolute;
   top: 10px;
@@ -333,4 +211,24 @@ button.sucess {
   font-weight: bold;
   color: blue;
   transform: translateX(-50%);
+}
+
+/* Comparação */
+.compare-row {
+  margin: 40px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alg-label {
+  font-weight: bold;
+  width: 60px;
+  text-align: right;
+}
+
+.diskLineWrapper {
+  position: relative;
+  flex: 1;
+  height: 60px;
 }

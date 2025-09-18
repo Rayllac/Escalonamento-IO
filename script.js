@@ -518,47 +518,37 @@ function mostrarComparacao(resultados, melhor) {
 function mostrarVisualComparacao(resultados, tamanho) {
   const viz = document.querySelector('.disk-visualization');
 
-  // recriar área
+  // recria área com 3 réguas iguais às usadas no animarAlgoritmo
   viz.innerHTML = `
-    <div class="viz-row">
-      <div class="viz-label">SSTF</div>
-      <div class="viz-line" id="line-sstf"></div>
-      <div class="head" id="head-sstf"></div>
+    <div class="compare-row">
+      <div class="alg-label">SSTF</div>
+      <div class="diskLineWrapper">
+        <div class="diskLine"></div>
+        <div class="head" id="head-sstf"></div>
+      </div>
     </div>
-    <div class="viz-row">
-      <div class="viz-label">SCAN</div>
-      <div class="viz-line" id="line-scan"></div>
-      <div class="head" id="head-scan"></div>
+    <div class="compare-row">
+      <div class="alg-label">SCAN</div>
+      <div class="diskLineWrapper">
+        <div class="diskLine"></div>
+        <div class="head" id="head-scan"></div>
+      </div>
     </div>
-    <div class="viz-row">
-      <div class="viz-label">C-SCAN</div>
-      <div class="viz-line" id="line-cscan"></div>
-      <div class="head" id="head-cscan"></div>
+    <div class="compare-row">
+      <div class="alg-label">C-SCAN</div>
+      <div class="diskLineWrapper">
+        <div class="diskLine"></div>
+        <div class="head" id="head-cscan"></div>
+      </div>
     </div>
   `;
 
-  function desenharRequisicoes(seq, id) {
-    const line = document.getElementById(id);
-    const largura = line.offsetWidth;
-
-    seq.forEach(req => {
-      const dot = document.createElement("div");
-      dot.className = "request-dot";
-      dot.style.left = `${(req / tamanho) * largura}px`;
-      dot.textContent = req;
-      line.appendChild(dot);
-    });
-  }
-
-  desenharRequisicoes(resultados.sstf.sequencia, "line-sstf");
-  desenharRequisicoes(resultados.scan.sequencia, "line-scan");
-  desenharRequisicoes(resultados.cscan.sequencia, "line-cscan");
-
-  // animar os 3 cabeçotes
-  animarHead(resultados.sstf.sequencia, "head-sstf", "line-sstf", tamanho);
-  animarHead(resultados.scan.sequencia, "head-scan", "line-scan", tamanho);
-  animarHead(resultados.cscan.sequencia, "head-cscan", "line-cscan", tamanho);
+  // desenhar e animar cada algoritmo usando o mesmo estilo já existente
+  desenharSequencia(resultados.sstf.sequencia, "head-sstf", tamanho);
+  desenharSequencia(resultados.scan.sequencia, "head-scan", tamanho);
+  desenharSequencia(resultados.cscan.sequencia, "head-cscan", tamanho);
 }
+
 
 function animarHead(sequencia, headId, lineId, tamanho) {
   const line = document.getElementById(lineId);
@@ -579,6 +569,31 @@ function animarHead(sequencia, headId, lineId, tamanho) {
   mover();
 }
 
+function desenharSequencia(sequencia, headId, tamanho) {
+  const head = document.getElementById(headId);
+  const wrapper = head.parentElement; // pega o .diskLineWrapper
+  const line = wrapper.getBoundingClientRect();
+
+  // desenhar labels das requisições
+  sequencia.forEach(req => {
+    const label = document.createElement("div");
+    label.className = "request-label";
+    label.style.left = `${(req / tamanho) * line.width}px`;
+    label.textContent = req;
+    wrapper.appendChild(label);
+  });
+
+  // animação do cabeçote
+  let i = 0;
+  function mover() {
+    if (i >= sequencia.length) return;
+    const pos = sequencia[i];
+    head.style.left = `${(pos / tamanho) * line.width}px`;
+    i++;
+    setTimeout(mover, 1000);
+  }
+  mover();
+}
 
 
 

@@ -455,6 +455,133 @@ function carregarDeArquivo(event) {
   reader.readAsText(file);
 }
 
+function compararAlgoritmos() {
+  const tamanho = getTamanho();
+  const posicaoInicial = estado.posicaoInicial;
+  const requisicoes = estado.requisicoes;
+
+  const resultados = {
+    sstf: algoritmoSSTF(requisicoes, posicaoInicial),
+    scan: algoritmoSCAN(requisicoes, posicaoInicial, tamanho),
+    cscan: algoritmoCSCAN(requisicoes, posicaoInicial, tamanho)
+  };
+
+  let melhor = Object.values(resultados).reduce((a, b) => a.movimentoTotal < b.movimentoTotal ? a : b);
+
+  mostrarComparacao(resultados, melhor);
+  mostrarVisualComparacao(resultados, tamanho);
+}
+
+
+function mostrarComparacao(resultados, melhor) {
+  const container = document.getElementById('algoritmoresults');
+  const resultsDiv = document.getElementById('results');
+
+  let tabela = `
+    <table class="steps-table">
+      <thead>
+        <tr>
+          <th>Algoritmo</th>
+          <th>Movimento Total</th>
+          <th>Requisições Atendidas</th>
+          <th>Ordem</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="${melhor.nome === resultados.sstf.nome ? 'background:#d4edda;' : ''}">
+          <td>${resultados.sstf.nome}</td>
+          <td>${resultados.sstf.movimentoTotal}</td>
+          <td>${resultados.sstf.sequencia.length}</td>
+          <td>${resultados.sstf.sequencia.join(' → ')}</td>
+        </tr>
+        <tr style="${melhor.nome === resultados.scan.nome ? 'background:#d4edda;' : ''}">
+          <td>${resultados.scan.nome}</td>
+          <td>${resultados.scan.movimentoTotal}</td>
+          <td>${resultados.scan.sequencia.length}</td>
+          <td>${resultados.scan.sequencia.join(' → ')}</td>
+        </tr>
+        <tr style="${melhor.nome === resultados.cscan.nome ? 'background:#d4edda;' : ''}">
+          <td>${resultados.cscan.nome}</td>
+          <td>${resultados.cscan.movimentoTotal}</td>
+          <td>${resultados.cscan.sequencia.length}</td>
+          <td>${resultados.cscan.sequencia.join(' → ')}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>✅ Melhor algoritmo:</strong> ${melhor.nome} (Menor movimento total)</p>
+  `;
+
+  container.innerHTML = tabela;
+  resultsDiv.style.display = 'block';
+}
+
+function mostrarVisualComparacao(resultados, tamanho) {
+  const viz = document.querySelector('.disk-visualization');
+
+  // recriar área
+  viz.innerHTML = `
+    <div class="viz-row">
+      <div class="viz-label">SSTF</div>
+      <div class="viz-line" id="line-sstf"></div>
+      <div class="head" id="head-sstf"></div>
+    </div>
+    <div class="viz-row">
+      <div class="viz-label">SCAN</div>
+      <div class="viz-line" id="line-scan"></div>
+      <div class="head" id="head-scan"></div>
+    </div>
+    <div class="viz-row">
+      <div class="viz-label">C-SCAN</div>
+      <div class="viz-line" id="line-cscan"></div>
+      <div class="head" id="head-cscan"></div>
+    </div>
+  `;
+
+  function desenharRequisicoes(seq, id) {
+    const line = document.getElementById(id);
+    const largura = line.offsetWidth;
+
+    seq.forEach(req => {
+      const dot = document.createElement("div");
+      dot.className = "request-dot";
+      dot.style.left = `${(req / tamanho) * largura}px`;
+      dot.textContent = req;
+      line.appendChild(dot);
+    });
+  }
+
+  desenharRequisicoes(resultados.sstf.sequencia, "line-sstf");
+  desenharRequisicoes(resultados.scan.sequencia, "line-scan");
+  desenharRequisicoes(resultados.cscan.sequencia, "line-cscan");
+
+  // animar os 3 cabeçotes
+  animarHead(resultados.sstf.sequencia, "head-sstf", "line-sstf", tamanho);
+  animarHead(resultados.scan.sequencia, "head-scan", "line-scan", tamanho);
+  animarHead(resultados.cscan.sequencia, "head-cscan", "line-cscan", tamanho);
+}
+
+function animarHead(sequencia, headId, lineId, tamanho) {
+  const line = document.getElementById(lineId);
+  const largura = line.offsetWidth;
+  const head = document.getElementById(headId);
+
+  let i = 0;
+  head.style.left = "0px"; // começa do início
+
+  function mover() {
+    if (i >= sequencia.length) return;
+    const pos = sequencia[i];
+    head.style.left = `${(pos / tamanho) * largura}px`;
+    i++;
+    setTimeout(mover, 800); // 800ms por movimento
+  }
+
+  mover();
+}
+
+
+
+
 
 inicializarControles();
 

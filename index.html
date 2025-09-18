@@ -40,9 +40,11 @@
               <div class="form-group">
                   <label for="fileInput">Carregar arquivo TXT:</label>
                   <input type="file" id="fileInput" accept=".txt">
-              <small style="color:#999; font-size:11px;">
-                Ex.: tamanho=100 | cabeca=30 | requisicoes=10, 20, 30
-              </small>
+              <span title="Formato do arquivo:
+                tamanho=NUM
+                cabeca=NUM
+                requisicoes=NUM1, NUM2, NUM3...">?</span>
+                </label>
               </div>
             </div>
           <div class="requests-display" id="requestsDisplay">
@@ -54,6 +56,7 @@
               <button onclick="runAlgoritmo('sstf')" class="sucess">SSTF - Mais Próximo</button>
               <button onclick="runAlgoritmo('scan')" class="sucess">SCAN - Elevador</button>
               <button onclick="runAlgoritmo('cscan')" class="sucess">C-SCAN - Circular</button>
+              <button onclick="compararAlgoritmos()" class="sucess">Comparar Todos</button>
 
               <div class="disk-visualization">
                 <div id="diskLine"></div>

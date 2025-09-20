@@ -295,7 +295,7 @@ function algoritmoSSTF(requisicoes, posicaoInicial) {
 
   return {
     nome: 'SSTF (Mais Próximo)',
-    explicacao: 'Atende sempre a requisição mais próxima da posição atual.',
+    explicacao: 'O algoritmo SSTF sempre seleciona, dentre as requisições pendentes, a que está mais próxima da posição atual da cabeça de leitura. Isso reduz o tempo de deslocamento em cada movimento, tornando-o eficiente em termos de busca individual.',
     sequencia: ordemAtendimento,
     movimentoTotal,
     passos
@@ -333,7 +333,7 @@ function algoritmoSCAN(requisicoes, posicaoInicial, tamanho) {
 
   return {
     nome: 'SCAN (Elevador)',
-    explicacao: 'Varre em uma direção até o fim, depois inverte a direção.',
+    explicacao: 'O SCAN é conhecido como algoritmo do elevador porque a cabeça do disco se movimenta em uma direção até atingir o final (ou a última requisição nesse sentido) e, em seguida, inverte o movimento. Durante a varredura, todas as requisições encontradas no caminho são atendidas na ordem em que aparecem.',
     sequencia: ordemAtendimento,
     movimentoTotal,
     passos
@@ -425,7 +425,7 @@ function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
 
   return {
     nome: 'C-SCAN (Circular SCAN)',
-    explicacao: 'Atende em um sentido; ao chegar no fim, volta ao início sem atender.',
+    explicacao: 'O C-SCAN é uma variação do SCAN. Ele também percorre as requisições em apenas um sentido (por exemplo, da esquerda para a direita). Ao chegar ao final do disco, a cabeça retorna diretamente ao início, sem atender nenhuma requisição no caminho de volta. Em seguida, retoma o mesmo sentido de varredura.',
     sequencia: ordemAtendimento,
     movimentoTotal,
     passos
@@ -449,13 +449,20 @@ function mostrarResultado(resultado) {
     resultsDiv.style.opacity = '1';
     animarAlgoritmo(resultado);
   }, 100);
+
+  const descDiv = document.getElementById('algoritmoDescricao');
+if (descDiv) {
+  descDiv.textContent = resultado.explicacao;
+  descDiv.classList.remove('show');
+  setTimeout(() => descDiv.classList.add('show'), 50);
+}
+
 }
 
 function criarLayoutResultado(resultado) {
   return `
     <div class="algorithm-result">
       <div class="algorithm-name">${resultado.nome}</div>
-      <p>${resultado.explicacao}</p>
 
       <div class="metrics">
         <div class="metric">
@@ -719,15 +726,29 @@ function compararAlgoritmos() {
     cscan: algoritmoCSCAN(estado.requisicoes, posicaoInicial, tamanho)
   };
 
-  const melhor = Object.values(resultados).reduce((a, b) => 
-    a.movimentoTotal < b.movimentoTotal ? a : b
-  );
+  // const melhor = Object.values(resultados).reduce((a, b) => 
+  //   a.movimentoTotal < b.movimentoTotal ? a : b
+  // );
+let melhores = [resultados.sstf];
+let melhor = resultados.sstf;
 
-  mostrarComparacao(resultados, melhor);
+for (let chave in resultados) {
+  const algoritmo = resultados[chave];
+
+  if (algoritmo.movimentoTotal < melhor.movimentoTotal) {
+    melhores = [algoritmo]; // reinicia lista com o novo melhor
+    melhor = algoritmo;
+  } else if (algoritmo.movimentoTotal === melhor.movimentoTotal && algoritmo !== melhor) {
+    melhores.push(algoritmo); // adiciona em caso de empate
+  }
+}
+
+
+  mostrarComparacao(resultados, melhores);
   mostrarVisualComparacao(resultados, tamanho);
 }
 
-function mostrarComparacao(resultados, melhor) {
+const mostrarComparacao = (resultados, melhores) =>  {
   const container = document.getElementById('algoritmoresults');
   const resultsDiv = document.getElementById('results');
 
@@ -749,8 +770,9 @@ function mostrarComparacao(resultados, melhor) {
       </thead>
       <tbody>
         ${Object.values(resultados).map(r => {
-          const eficiencia = ((melhor.movimentoTotal / r.movimentoTotal) * 100).toFixed(1);
-          const isMelhor = melhor.nome === r.nome;
+          const eficiencia = ((melhores[0].movimentoTotal / r.movimentoTotal) * 100).toFixed(1);
+          const melhoresNomes = melhores.map(e => e.nome);
+          const isMelhor = melhoresNomes.includes(r.nome);
           
           return `
             <tr class="${isMelhor ? 'best-result' : ''}">
@@ -766,8 +788,8 @@ function mostrarComparacao(resultados, melhor) {
     </table>
     
     <div class="best-algorithm">
-      <strong>🏆 Melhor algoritmo:</strong> ${melhor.nome} 
-      (${melhor.movimentoTotal} movimentos)
+      <strong>🏆 Melhores algoritmos:</strong> ${melhores.map(e => e.nome).join(";")} 
+      (${melhores[0].movimentoTotal} movimentos)
     </div>
   `;
 
@@ -1102,3 +1124,4 @@ if (document.readyState === 'loading') {
 } else {
   inicializar();
 }
+

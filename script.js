@@ -278,28 +278,42 @@ function mostrarResultado(resultado) {
 function animarAlgoritmo(resultado) {
   const tamanho = getTamanho();
   const viz = document.querySelector('.disk-visualization');
+
   viz.innerHTML = `<div id="diskLine"></div><div id="head"></div>`;
   const line = viz.getBoundingClientRect();
+  const head = document.getElementById('head');
 
-  resultado.sequencia.forEach(req => {
+  let i = 0;
+  let movimentoAtual = 0;
+  const movimentoDiv = document.querySelector('.metric-value'); // mostra movimento total
+
+  function mover() {
+    if (i >= resultado.passos.length) return;
+
+    const passo = resultado.passos[i];
+    const pos = passo.para;
+
+    // move cabeça
+    head.style.left = `${(pos / tamanho) * line.width}px`;
+
+    // adiciona requisição na régua
     const label = document.createElement('div');
     label.className = 'request-label';
-    label.style.left = `${(req / tamanho) * line.width}px`;
-    label.textContent = req;
+    label.style.left = `${(pos / tamanho) * line.width}px`;
+    label.textContent = pos;
     viz.appendChild(label);
-  });
 
-  const head = document.getElementById('head');
-  let i = 0;
-  function mover() {
-    if (i >= resultado.sequencia.length) return;
-    const pos = resultado.sequencia[i];
-    head.style.left = `${(pos / tamanho) * line.width}px`;
+    // atualiza movimento
+    movimentoAtual += passo.distancia;
+    if (movimentoDiv) movimentoDiv.textContent = movimentoAtual;
+
     i++;
-    setTimeout(mover, 1000);
+    setTimeout(mover, 1000); // espera 1s antes do próximo passo
   }
+
   mover();
 }
+
 
 function carregarDeArquivo(event) {
   const file = event.target.files[0];
@@ -400,5 +414,42 @@ function desenharSequencia(sequencia, headId, tamanho) {
   }
   mover();
 }
+
+
+function desenharSequenciaAnimada(passos, headId, wrapperId, tamanho, movimentoSpan) {
+  const head = document.getElementById(headId);
+  const wrapper = document.getElementById(wrapperId);
+  const line = wrapper.getBoundingClientRect();
+
+  let i = 0;
+  let movimentoAtual = 0;
+
+  function mover() {
+    if (i >= passos.length) return;
+
+    const passo = passos[i];
+    const pos = passo.para;
+
+    // move cabeça
+    head.style.left = `${(pos / tamanho) * line.width}px`;
+
+    // adiciona requisição
+    const label = document.createElement('div');
+    label.className = 'request-label';
+    label.style.left = `${(pos / tamanho) * line.width}px`;
+    label.textContent = pos;
+    wrapper.appendChild(label);
+
+    // atualiza movimento
+    movimentoAtual += passo.distancia;
+    if (movimentoSpan) movimentoSpan.textContent = movimentoAtual;
+
+    i++;
+    setTimeout(mover, 1000);
+  }
+
+  mover();
+}
+
 
 inicializarControles();

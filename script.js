@@ -1,6 +1,3 @@
-/* ========================
-   Estado Global e Configurações
-========================= */
 const CONFIGURACOES = {
   VELOCIDADE_ANIMACAO: 800,
   DURACAO_TRANSICAO: 300,
@@ -15,9 +12,6 @@ let estado = {
   animacaoAtiva: false
 };
 
-/* ========================
-   Utilitários de Validação
-========================= */
 function getTamanho() {
   const valor = parseInt(document.getElementById('diskSize').value);
   return Number.isNaN(valor) ? CONFIGURACOES.TAMANHO_PADRAO : Math.max(1, valor);
@@ -36,9 +30,6 @@ function validarEntrada(valor, tamanho) {
   return { valido: true };
 }
 
-/* ========================
-   Manipulação de Requisições
-========================= */
 function addRequisicao() {
   if (estado.animacaoAtiva) {
     alert('Aguarde o término da animação atual!');
@@ -110,9 +101,6 @@ function atualizarRequisicoes() {
   }
 }
 
-/* ========================
-   Animações de Interface
-========================= */
 function animarAdicaoRequisicao() {
   const tags = document.querySelectorAll('.request-tag');
   const ultimaTag = tags[tags.length - 1];
@@ -171,11 +159,7 @@ function ocultarResultados() {
   }, CONFIGURACOES.DURACAO_TRANSICAO);
 }
 
-/* ========================
-   Inicialização e Eventos
-========================= */
 function inicializarControles() {
-  // Input de nova requisição
   const inputReq = document.getElementById('newRequest');
   if (inputReq) {
     inputReq.addEventListener('keypress', e => {
@@ -216,7 +200,6 @@ function inicializarControles() {
     });
   }
 
-  // Input de arquivo
   const inputFile = document.getElementById('fileInput');
   if (inputFile) {
     inputFile.addEventListener('change', carregarDeArquivo);
@@ -226,9 +209,7 @@ function inicializarControles() {
   resetarVisualizacao();
 }
 
-/* ========================
-   Execução de Algoritmos
-========================= */
+
 function runAlgoritmo(tipo) {
   if (estado.animacaoAtiva) {
     alert('Aguarde o término da animação atual!');
@@ -261,9 +242,6 @@ function runAlgoritmo(tipo) {
   }
 }
 
-/* ========================
-   Implementação dos Algoritmos
-========================= */
 function algoritmoSSTF(requisicoes, posicaoInicial) {
   let pendentes = [...requisicoes];
   let posicaoAtual = posicaoInicial;
@@ -272,9 +250,13 @@ function algoritmoSSTF(requisicoes, posicaoInicial) {
   let passos = [];
 
   while (pendentes.length > 0) {
-    const maisProxima = pendentes.reduce((a, b) =>
-      Math.abs(a - posicaoAtual) < Math.abs(b - posicaoAtual) ? a : b
-    );
+    let maisProxima = pendentes[0];
+
+    for (const p of pendentes) {
+      if (Math.abs(p - posicaoAtual) < Math.abs(maisProxima - posicaoAtual)) {
+        maisProxima = p;
+      }
+    }
 
     const deslocamento = Math.abs(maisProxima - posicaoAtual);
     movimentoTotal += deslocamento;
@@ -432,9 +414,6 @@ function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
   };
 }
 
-/* ========================
-   Exibição de Resultados
-========================= */
 function mostrarResultado(resultado) {
   const container = document.getElementById('algoritmoresults');
   const resultsDiv = document.getElementById('results');
@@ -515,16 +494,13 @@ function animarAlgoritmo(resultado) {
   const pendingDiv = document.getElementById('pendingQueue');
   const completedDiv = document.getElementById('completedQueue');
 
-  // Estado da animação
   let indicePasso = 0;
   let movimentoAcumulado = 0;
   let concluidas = [];
 
-  // Configurar posição inicial
   head.style.left = `${(estado.posicaoInicial / tamanho) * line.width}px`;
   head.style.transition = `left ${CONFIGURACOES.VELOCIDADE_ANIMACAO}ms cubic-bezier(0.4, 0, 0.2, 1)`;
 
-  // Inicializar interface
   currentDiv.textContent = estado.posicaoInicial;
   atualizarFilaPendente(estado.requisicoes, pendingDiv);
 
@@ -553,7 +529,6 @@ function animarAlgoritmo(resultado) {
       atualizarFilaConcluidas(concluidas, completedDiv);
     }
 
-    // Atualizar interface
     currentDiv.textContent = passo.para;
     atualizarFilaPendente(passo.pendentesDepois, pendingDiv);
 
@@ -561,7 +536,6 @@ function animarAlgoritmo(resultado) {
     setTimeout(executarProximoPasso, CONFIGURACOES.VELOCIDADE_ANIMACAO);
   }
 
-  // Iniciar animação
   setTimeout(executarProximoPasso, 500);
 
   function finalizarAnimacao() {
@@ -571,14 +545,10 @@ function animarAlgoritmo(resultado) {
   }
 }
 
-/* ========================
-   Utilitários de Animação
-========================= */
 function moverCabeca(head, posicao, tamanho, larguraLinha) {
   const posicaoPixels = (posicao / tamanho) * larguraLinha;
   head.style.left = `${posicaoPixels}px`;
   
-  // Efeito de pulsação na cabeça
   head.style.transform = 'scale(1.2)';
   setTimeout(() => {
     head.style.transform = 'scale(1)';
@@ -639,9 +609,7 @@ function atualizarFilaConcluidas(concluidas, container) {
   }
 }
 
-/* ========================
-   Carregamento de Arquivo
-========================= */
+
 function carregarDeArquivo(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -703,9 +671,7 @@ function aplicarDadosCarregados(dados) {
   resetarVisualizacao();
 }
 
-/* ========================
-   Comparação de Algoritmos
-========================= */
+
 function compararAlgoritmos() {
   if (estado.animacaoAtiva) {
     alert('Aguarde o término da animação atual!');
@@ -726,23 +692,19 @@ function compararAlgoritmos() {
     cscan: algoritmoCSCAN(estado.requisicoes, posicaoInicial, tamanho)
   };
 
-  // const melhor = Object.values(resultados).reduce((a, b) => 
-  //   a.movimentoTotal < b.movimentoTotal ? a : b
-  // );
-let melhores = [resultados.sstf];
-let melhor = resultados.sstf;
+  let melhores = [resultados.sstf];
+  let melhor = resultados.sstf;
 
-for (let chave in resultados) {
-  const algoritmo = resultados[chave];
+  for (let chave in resultados) {
+    const algoritmo = resultados[chave];
 
-  if (algoritmo.movimentoTotal < melhor.movimentoTotal) {
-    melhores = [algoritmo]; // reinicia lista com o novo melhor
-    melhor = algoritmo;
-  } else if (algoritmo.movimentoTotal === melhor.movimentoTotal && algoritmo !== melhor) {
-    melhores.push(algoritmo); // adiciona em caso de empate
+    if (algoritmo.movimentoTotal < melhor.movimentoTotal) {
+      melhores = [algoritmo];
+      melhor = algoritmo;
+    } else if (algoritmo.movimentoTotal === melhor.movimentoTotal && algoritmo !== melhor) {
+      melhores.push(algoritmo); 
+    }
   }
-}
-
 
   mostrarComparacao(resultados, melhores);
   mostrarVisualComparacao(resultados, tamanho);
@@ -894,14 +856,16 @@ function desenharSequencia(sequencia, headId, tamanho) {
   setTimeout(moverProximo, 300);
 }
 
-/* ========================
-   Utilitários de Performance
-========================= */
+
 function calcularEstatisticas(resultados) {
   const movimentos = Object.values(resultados).map(r => r.movimentoTotal);
   const minimo = Math.min(...movimentos);
   const maximo = Math.max(...movimentos);
-  const media = movimentos.reduce((a, b) => a + b, 0) / movimentos.length;
+  let soma = 0;
+  for (const m of movimentos) {
+    soma += m;
+  }
+  const media = soma / movimentos.length;
   
   return {
     minimo,
@@ -941,9 +905,7 @@ function exportarResultados(resultados) {
   URL.revokeObjectURL(url);
 }
 
-/* ========================
-   Validações Avançadas
-========================= */
+
 function validarConfiguracao() {
   const erros = [];
   
@@ -973,11 +935,8 @@ function validarConfiguracao() {
   };
 }
 
-/* ========================
-   Melhorias de Acessibilidade
-========================= */
 function adicionarAcessibilidade() {
-  // Adicionar ARIA labels
+
   const elementos = {
     'diskSize': 'Tamanho do disco em setores',
     'initialPosition': 'Posição inicial da cabeça do disco',
@@ -1007,44 +966,29 @@ function anunciarStatus(mensagem) {
   }
 }
 
-/* ========================
-   Otimizações de Performance
-========================= */
 function otimizarAnimacoes() {
-  // Desabilitar animações se o usuário preferir movimento reduzido
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     CONFIGURACOES.VELOCIDADE_ANIMACAO = 200;
     CONFIGURACOES.DURACAO_TRANSICAO = 100;
   }
-  
-  // Otimizar para dispositivos com baixa performance
   if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) {
     CONFIGURACOES.VELOCIDADE_ANIMACAO = Math.min(CONFIGURACOES.VELOCIDADE_ANIMACAO * 1.5, 1200);
   }
 }
 
-/* ========================
-   Tratamento de Erros Aprimorado
-========================= */
 function tratarErro(erro, contexto = 'Operação') {
   console.error(`Erro em ${contexto}:`, erro);
   
   const mensagemErro = erro.message || 'Erro desconhecido';
   alert(`${contexto} falhou: ${mensagemErro}`);
   
-  // Reset do estado em caso de erro crítico
   if (contexto.includes('Animação')) {
     estado.animacaoAtiva = false;
   }
 }
 
-/* ========================
-   Gerenciamento de Estado Aprimorado
-========================= */
 function salvarEstadoLocal() {
   try {
-    // Note: Em ambientes que não suportam localStorage, 
-    // este será um no-op silencioso
     if (typeof Storage !== 'undefined') {
       const estadoParaSalvar = {
         tamanho: estado.tamanho,
@@ -1055,7 +999,6 @@ function salvarEstadoLocal() {
       localStorage.setItem('diskSchedulerState', JSON.stringify(estadoParaSalvar));
     }
   } catch (error) {
-    // Falha silenciosa se localStorage não estiver disponível
   }
 }
 
@@ -1065,51 +1008,37 @@ function carregarEstadoLocal() {
       const estadoSalvo = localStorage.getItem('diskSchedulerState');
       if (estadoSalvo) {
         const dados = JSON.parse(estadoSalvo);
-        
-        // Verificar se o estado não é muito antigo (24 horas)
         if (Date.now() - dados.timestamp < 24 * 60 * 60 * 1000) {
           return dados;
         }
       }
     }
   } catch (error) {
-    // Falha silenciosa se localStorage não estiver disponível
   }
   return null;
 }
 
-/* ========================
-   Inicialização Principal
-========================= */
 function inicializar() {
   try {
-    // Aplicar otimizações
     otimizarAnimacoes();
-    
-    // Adicionar acessibilidade
     adicionarAcessibilidade();
-    
-    // Tentar carregar estado anterior
+
     const estadoAnterior = carregarEstadoLocal();
     if (estadoAnterior) {
       estado.tamanho = estadoAnterior.tamanho;
       estado.posicaoInicial = estadoAnterior.posicaoInicial;
       estado.requisicoes = estadoAnterior.requisicoes;
-      
-      // Atualizar inputs
       document.getElementById('diskSize').value = estado.tamanho;
       document.getElementById('initialPosition').value = estado.posicaoInicial;
     }
     
-    // Inicializar controles
     inicializarControles();
     
-    // Salvar estado quando houver mudanças
     setInterval(() => {
       if (!estado.animacaoAtiva) {
         salvarEstadoLocal();
       }
-    }, 5000); // A cada 5 segundos
+    }, 5000); 
     
     anunciarStatus('Simulador de algoritmos de disco carregado e pronto para uso');
     
@@ -1118,7 +1047,6 @@ function inicializar() {
   }
 }
 
-// Aguardar carregamento completo da página
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', inicializar);
 } else {

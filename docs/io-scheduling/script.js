@@ -1,6 +1,6 @@
 const CONFIGURACOES = {
   VELOCIDADE_ANIMACAO: 800,
-  DURACAO_TRANSICAO: 300,
+  DURACAO_TRANSICAO: 180,
   TAMANHO_PADRAO: 50,
   POSICAO_INICIAL_PADRAO: 25
 };
@@ -873,9 +873,15 @@ function mostrarVisualComparacao(resultados, tamanho) {
   `;
 
   // Animar cada algoritmo com delay
-  setTimeout(() => desenharSequencia(resultados.sstf.sequencia, "head-sstf", tamanho), 0);
-  setTimeout(() => desenharSequencia(resultados.scan.sequencia, "head-scan", tamanho), 500);
+  setTimeout(() => desenharSequencia(resultados.sstf.sequencia, "head-sstf", tamanho), 1000);
+  setTimeout(() => desenharSequencia(resultados.scan.sequencia, "head-scan", tamanho), 1000);
   setTimeout(() => desenharSequencia(resultados.cscan.sequencia, "head-cscan", tamanho), 1000);
+
+  const descDiv = document.getElementById('algoritmoDescricao');
+  if (descDiv) {
+    descDiv.textContent = '';
+    descDiv.classList.remove('show');
+  }
 }
 
 function desenharSequencia(sequencia, headId, tamanho) {
@@ -897,7 +903,7 @@ function desenharSequencia(sequencia, headId, tamanho) {
     marcador.style.left = `${(req / tamanho) * line.width}px`;
     marcador.textContent = req;
     marcador.style.opacity = '0';
-    marcador.style.transform = 'scale(0.8)';
+    marcador.style.transform = 'translateX(-50%) scale(0.85)';
     marcador.style.transition = `all ${CONFIGURACOES.DURACAO_TRANSICAO}ms ease-out`;
     
     wrapper.appendChild(marcador);
@@ -905,7 +911,7 @@ function desenharSequencia(sequencia, headId, tamanho) {
     // Animar aparição dos marcadores
     setTimeout(() => {
       marcador.style.opacity = '1';
-      marcador.style.transform = 'scale(1)';
+      marcador.style.transform = 'translateX(-50%) scale(1)';
     }, index * 100);
   });
 
@@ -924,17 +930,17 @@ function desenharSequencia(sequencia, headId, tamanho) {
     if (marcadores[indice]) {
       marcadores[indice].style.backgroundColor = '#28a745';
       marcadores[indice].style.color = 'white';
-      marcadores[indice].style.transform = 'scale(1.1)';
+      marcadores[indice].style.transform = 'translateX(-50%) scale(1.1)';
       
       setTimeout(() => {
         if (marcadores[indice]) {
-          marcadores[indice].style.transform = 'scale(1)';
+          marcadores[indice].style.transform = 'translateX(-50%) scale(1)';
         }
       }, CONFIGURACOES.DURACAO_TRANSICAO);
     }
     
     indice++;
-    setTimeout(moverProximo, CONFIGURACOES.VELOCIDADE_ANIMACAO * 0.6);
+    setTimeout(moverProximo, CONFIGURACOES.VELOCIDADE_ANIMACAO * 2);
   }
   
   setTimeout(moverProximo, 300);

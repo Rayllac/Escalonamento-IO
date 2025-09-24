@@ -5,6 +5,8 @@ const CONFIGURACOES = {
   POSICAO_INICIAL_PADRAO: 25
 };
 
+const STORAGE_KEY = 'escalonamentoIOEstado';
+
 let estado = {
   tamanho: CONFIGURACOES.TAMANHO_PADRAO,
   posicaoInicial: CONFIGURACOES.POSICAO_INICIAL_PADRAO,
@@ -12,8 +14,48 @@ let estado = {
   animacaoAtiva: false
 };
 
+function salvarEstado() {
+  if (!window.localStorage) return;
+  const payload = {
+    tamanho: estado.tamanho,
+    posicaoInicial: estado.posicaoInicial,
+    requisicoes: estado.requisicoes
+  };
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (error) {
+    console.warn('Não foi possível salvar o estado:', error);
+  }
+}
+
+function carregarEstado() {
+  if (!window.localStorage) return;
+  try {
+    const bruto = window.localStorage.getItem(STORAGE_KEY);
+    if (!bruto) return;
+
+    const salvo = JSON.parse(bruto);
+    if (typeof salvo.tamanho === 'number') estado.tamanho = salvo.tamanho;
+    if (typeof salvo.posicaoInicial === 'number') estado.posicaoInicial = salvo.posicaoInicial;
+    if (Array.isArray(salvo.requisicoes)) estado.requisicoes = salvo.requisicoes;
+  } catch (error) {
+    console.warn('Não foi possível carregar o estado salvo:', error);
+  }
+}
+
+function sincronizarInputs() {
+  const diskInput = document.getElementById('diskSize');
+  if (diskInput) diskInput.value = estado.tamanho;
+
+  const posInput = document.getElementById('initialPosition');
+  if (posInput) posInput.value = estado.posicaoInicial;
+}
+
 function getTamanho() {
-  const valor = parseInt(document.getElementById('diskSize').value);
+  const input = document.getElementById('diskSize');
+  if (!input) return estado.tamanho || CONFIGURACOES.TAMANHO_PADRAO;
+
+  const valor = parseInt(input.value);
   return Number.isNaN(valor) ? CONFIGURACOES.TAMANHO_PADRAO : Math.max(1, valor);
 }
 
@@ -49,6 +91,7 @@ function addRequisicao() {
   estado.requisicoes.push(valor);
   input.value = '';
   atualizarRequisicoes();
+  salvarEstado();
   animarAdicaoRequisicao();
 }
 
@@ -68,6 +111,7 @@ function exemploAutomatico() {
 
   estado.requisicoes = Array.from(numeros);
   atualizarRequisicoes();
+  salvarEstado();
   animarCarregamentoAutomatico();
 }
 
@@ -83,6 +127,7 @@ function limparRequisicoes() {
   atualizarRequisicoes();
   resetarVisualizacao();
   ocultarResultados();
+  salvarEstado();
   
   const inputFile = document.getElementById('fileInput');
   if (inputFile) inputFile.value = '';
@@ -91,14 +136,22 @@ function limparRequisicoes() {
 function atualizarRequisicoes() {
   const display = document.getElementById('requestsDisplay');
 
-  if (estado.requisicoes.length === 0) {
-    display.innerHTML = '<strong>Requisições:</strong> <em>Nenhuma ainda. Adicione algumas!</em>';
-  } else {
-    const tags = estado.requisicoes.map(req => 
-      `<span class='request-tag' data-value='${req}'>${req}</span>`
-    );
-    display.innerHTML = "<strong>Requisições:</strong> " + tags.join(" ");
+  if (display) {
+    if (estado.requisicoes.length === 0) {
+      display.innerHTML = '<strong>Requisições:</strong> <em>Nenhuma ainda. Adicione algumas!</em>';
+    } else {
+      const tags = estado.requisicoes.map(req => 
+        `<span class='request-tag' data-value='${req}'>${req}</span>`
+      );
+      display.innerHTML = "<strong>Requisições:</strong> " + tags.join(" ");
+    }
   }
+
+  const resumoTamanho = document.getElementById('resumoTamanho');
+  if (resumoTamanho) resumoTamanho.textContent = estado.tamanho;
+
+  const resumoCabeca = document.getElementById('resumoCabeca');
+  if (resumoCabeca) resumoCabeca.textContent = estado.posicaoInicial;
 }
 
 function animarAdicaoRequisicao() {
@@ -137,6 +190,8 @@ function animarCarregamentoAutomatico() {
 
 function resetarVisualizacao() {
   const viz = document.querySelector('.disk-visualization');
+  if (!viz) return;
+
   viz.innerHTML = `<div id="diskLine"></div><div id="head"></div>`;
 
   const head = document.getElementById('head');
@@ -150,6 +205,8 @@ function resetarVisualizacao() {
 
 function ocultarResultados() {
   const results = document.getElementById('results');
+  if (!results) return;
+
   results.style.transition = `opacity ${CONFIGURACOES.DURACAO_TRANSICAO}ms ease-out`;
   results.style.opacity = '0';
   
@@ -186,6 +243,7 @@ function inicializarControles() {
       estado.requisicoes = estado.requisicoes.filter(req => req < estado.tamanho);
       atualizarRequisicoes();
       resetarVisualizacao();
+      salvarEstado();
     });
   }
 
@@ -196,7 +254,9 @@ function inicializarControles() {
       const valor = parseInt(e.target.value);
       estado.posicaoInicial = Number.isNaN(valor) ? 0 : Math.max(0, Math.min(valor, estado.tamanho - 1));
       e.target.value = estado.posicaoInicial;
+      atualizarRequisicoes();
       resetarVisualizacao();
+      salvarEstado();
     });
   }
 
@@ -418,6 +478,8 @@ function mostrarResultado(resultado) {
   const container = document.getElementById('algoritmoresults');
   const resultsDiv = document.getElementById('results');
 
+  if (!container || !resultsDiv) return;
+
   container.innerHTML = criarLayoutResultado(resultado);
   
   resultsDiv.style.display = 'block';
@@ -481,6 +543,7 @@ function criarLayoutResultado(resultado) {
 function animarAlgoritmo(resultado) {
   const tamanho = getTamanho();
   const viz = document.querySelector('.disk-visualization');
+  if (!viz) return;
 
   viz.innerHTML = `<div id="diskLine"></div><div id="head"></div>`;
   
@@ -653,12 +716,14 @@ function processarArquivo(conteudo) {
 function aplicarDadosCarregados(dados) {
   if (dados.tamanho !== null && dados.tamanho > 0) {
     estado.tamanho = dados.tamanho;
-    document.getElementById("diskSize").value = dados.tamanho;
+    const diskInput = document.getElementById("diskSize");
+    if (diskInput) diskInput.value = dados.tamanho;
   }
 
   if (dados.cabeca !== null && dados.cabeca >= 0) {
     estado.posicaoInicial = Math.min(dados.cabeca, estado.tamanho - 1);
-    document.getElementById("initialPosition").value = estado.posicaoInicial;
+    const headInput = document.getElementById("initialPosition");
+    if (headInput) headInput.value = estado.posicaoInicial;
   }
 
   if (dados.requisicoes.length > 0) {
@@ -669,6 +734,7 @@ function aplicarDadosCarregados(dados) {
 
   atualizarRequisicoes();
   resetarVisualizacao();
+  salvarEstado();
 }
 
 
@@ -762,6 +828,7 @@ const mostrarComparacao = (resultados, melhores) =>  {
 
 function mostrarVisualComparacao(resultados, tamanho) {
   const viz = document.querySelector('.disk-visualization');
+  if (!viz) return;
   
   viz.innerHTML = `
     <div class="compare-header">Visualização Comparativa</div>
@@ -987,61 +1054,48 @@ function tratarErro(erro, contexto = 'Operação') {
   }
 }
 
-function salvarEstadoLocal() {
-  try {
-    if (typeof Storage !== 'undefined') {
-      const estadoParaSalvar = {
-        tamanho: estado.tamanho,
-        posicaoInicial: estado.posicaoInicial,
-        requisicoes: estado.requisicoes,
-        timestamp: Date.now()
-      };
-      localStorage.setItem('diskSchedulerState', JSON.stringify(estadoParaSalvar));
-    }
-  } catch (error) {
+function configurarPaginaEntrada() {
+  const botao = document.getElementById('goToSimulation');
+  if (botao) {
+    botao.addEventListener('click', () => {
+      salvarEstado();
+      window.location.href = 'simulacao.html';
+    });
   }
 }
 
-function carregarEstadoLocal() {
-  try {
-    if (typeof Storage !== 'undefined') {
-      const estadoSalvo = localStorage.getItem('diskSchedulerState');
-      if (estadoSalvo) {
-        const dados = JSON.parse(estadoSalvo);
-        if (Date.now() - dados.timestamp < 24 * 60 * 60 * 1000) {
-          return dados;
-        }
-      }
-    }
-  } catch (error) {
+function configurarPaginaSimulacao() {
+  const botaoVoltar = document.getElementById('backToEntrada');
+  if (botaoVoltar) {
+    botaoVoltar.addEventListener('click', () => {
+      salvarEstado();
+      window.location.href = 'entrada.html';
+    });
   }
-  return null;
+
+  const aviso = document.getElementById('alertaSemDados');
+  if (aviso) {
+    aviso.style.display = estado.requisicoes.length > 0 ? 'none' : 'block';
+  }
 }
 
 function inicializar() {
   try {
+    estado.animacaoAtiva = false;
     otimizarAnimacoes();
     adicionarAcessibilidade();
-
-    const estadoAnterior = carregarEstadoLocal();
-    if (estadoAnterior) {
-      estado.tamanho = estadoAnterior.tamanho;
-      estado.posicaoInicial = estadoAnterior.posicaoInicial;
-      estado.requisicoes = estadoAnterior.requisicoes;
-      document.getElementById('diskSize').value = estado.tamanho;
-      document.getElementById('initialPosition').value = estado.posicaoInicial;
-    }
-    
+    carregarEstado();
+    sincronizarInputs();
     inicializarControles();
-    
-    setInterval(() => {
-      if (!estado.animacaoAtiva) {
-        salvarEstadoLocal();
-      }
-    }, 5000); 
-    
+
+    const pagina = document.body.dataset.page || 'entrada';
+    if (pagina === 'simulacao') {
+      configurarPaginaSimulacao();
+    } else {
+      configurarPaginaEntrada();
+    }
+
     anunciarStatus('Simulador de algoritmos de disco carregado e pronto para uso');
-    
   } catch (error) {
     tratarErro(error, 'Inicialização');
   }
@@ -1052,4 +1106,3 @@ if (document.readyState === 'loading') {
 } else {
   inicializar();
 }
-

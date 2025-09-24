@@ -181,6 +181,55 @@ button:disabled {
   border: 1px solid #e9ecef;
 }
 
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.config-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.summary-label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.alert-info {
+  display: none;
+  margin-top: 25px;
+  padding: 18px 20px;
+  border-radius: 8px;
+  border-left: 4px solid #6c757d;
+  background: #f1f3f5;
+  color: #495057;
+  font-size: 14px;
+}
+
+.alert-info strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
 .request-tag {
   display: inline-block;
   margin: 3px;

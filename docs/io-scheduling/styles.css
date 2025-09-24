@@ -15,6 +15,11 @@ body {
   line-height: 1.6;
 }
 
+body[data-page="simulacao"] {
+  padding: 16px 12px 24px 12px;
+  background: #e9edf5;
+}
+
 /* ========================
    Layout Principal
 ========================= */
@@ -30,6 +35,15 @@ body {
 
 .container:hover {
   box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+}
+
+body[data-page="simulacao"] .container {
+  max-width: none;
+  width: 100%;
+  background: #f3f6fb;
+  border-radius: 20px;
+  padding: 32px 48px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
 h1 {
@@ -56,6 +70,10 @@ h1 {
   gap: 30px;
 }
 
+body[data-page="simulacao"] .controls {
+  gap: 24px;
+}
+
 .control-section {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 8px;
@@ -67,6 +85,18 @@ h1 {
 .control-section:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+body[data-page="simulacao"] .simulacao-panel {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+body[data-page="simulacao"] .simulacao-panel:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .control-section h3 {
@@ -228,6 +258,134 @@ button:disabled {
 .alert-info strong {
   display: block;
   margin-bottom: 6px;
+}
+
+.simulacao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 20px;
+  margin-bottom: 12px;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+}
+
+.simulacao-header .header-info {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.simulacao-header .header-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 90px;
+}
+
+.simulacao-header .summary-label {
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.simulacao-header .summary-value {
+  font-size: 20px;
+}
+
+.simulacao-header .header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.requests-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 0;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #f8f9fb;
+  border: 1px dashed #d4d8dd;
+  overflow-x: auto;
+}
+
+.requests-bar strong {
+  margin-right: 6px;
+}
+
+
+.simulacao-controls {
+  grid-template-columns: 1fr;
+}
+
+.simulacao-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.simulacao-layout {
+  display: grid;
+  grid-template-columns: minmax(400px, 1fr) minmax(800px, 1.25fr);
+  gap: 24px;
+  margin-top: 20px;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .simulacao-layout {
+    grid-template-columns: minmax(400px, 1fr) minmax(800px, 1.1fr);
+  }
+}
+
+.simulacao-visual {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.simulacao-visual .disk-visualization {
+  margin: 0;
+}
+
+.simulacao-card {
+  background: #ffffff;
+  border: 1px solid #dde3ee;
+  margin-top: 0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.simulacao-layout .results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 0;
+  align-self: stretch;
+  grid-column: auto;
+  min-width: 0;
+  height: 100%;
+}
+
+.simulacao-layout .results h3 {
+  margin-top: 0;
+}
+
+.simulacao-layout .algorithm-result {
+  margin-top: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .request-tag {
@@ -1357,6 +1515,24 @@ button.sucess {
   .results {
     grid-column: span 1;
   }
+  .simulacao-layout {
+    grid-template-columns: 1fr;
+  }
+  .simulacao-layout .results {
+    width: 100%;
+  }
+  .simulacao-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .simulacao-header .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .requests-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ========================
@@ -2407,4 +2583,26 @@ button:disabled {
 }
 .alg-desc.show {
   opacity: 1;
+}
+.simulacao-layout #algoritmoresults {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.simulacao-layout #algoritmoresults::-webkit-scrollbar {
+  width: 6px;
+}
+
+.simulacao-layout #algoritmoresults::-webkit-scrollbar-thumb {
+  background: rgba(73, 80, 87, 0.35);
+  border-radius: 3px;
+}
+
+.simulacao-layout #algoritmoresults::-webkit-scrollbar-track {
+  background: rgba(233, 236, 239, 0.5);
+  border-radius: 3px;
 }

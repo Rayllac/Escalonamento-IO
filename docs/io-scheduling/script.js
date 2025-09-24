@@ -14,6 +14,8 @@ let estado = {
   animacaoAtiva: false
 };
 
+let agendamentoEqualizacao = null;
+
 function salvarEstado() {
   if (!window.localStorage) return;
   const payload = {
@@ -152,6 +154,9 @@ function atualizarRequisicoes() {
 
   const resumoCabeca = document.getElementById('resumoCabeca');
   if (resumoCabeca) resumoCabeca.textContent = estado.posicaoInicial;
+
+  const resumoRequisicoes = document.getElementById('resumoRequisicoes');
+  if (resumoRequisicoes) resumoRequisicoes.textContent = estado.requisicoes.length;
 }
 
 function animarAdicaoRequisicao() {
@@ -213,6 +218,7 @@ function ocultarResultados() {
   setTimeout(() => {
     results.style.display = 'none';
     results.style.opacity = '1';
+    resetarAlturaCardsSimulacao();
   }, CONFIGURACOES.DURACAO_TRANSICAO);
 }
 
@@ -482,13 +488,15 @@ function mostrarResultado(resultado) {
 
   container.innerHTML = criarLayoutResultado(resultado);
   
-  resultsDiv.style.display = 'block';
+  resultsDiv.style.display = 'flex';
   resultsDiv.style.opacity = '0';
   resultsDiv.style.transition = `opacity ${CONFIGURACOES.DURACAO_TRANSICAO}ms ease-in`;
   
   setTimeout(() => {
     resultsDiv.style.opacity = '1';
     animarAlgoritmo(resultado);
+    setTimeout(equalizarAlturasSimulacao, 50);
+    rolarParaResultados();
   }, 100);
 
   const descDiv = document.getElementById('algoritmoDescricao');
@@ -497,6 +505,9 @@ if (descDiv) {
   descDiv.classList.remove('show');
   setTimeout(() => descDiv.classList.add('show'), 50);
 }
+
+  const aviso = document.getElementById('alertaSemDados');
+  if (aviso) aviso.style.display = 'none';
 
 }
 
@@ -822,8 +833,14 @@ const mostrarComparacao = (resultados, melhores) =>  {
   `;
 
   container.innerHTML = tabela;
-  resultsDiv.style.display = 'block';
+  resultsDiv.style.display = 'flex';
   resultsDiv.style.opacity = '1';
+
+  const aviso = document.getElementById('alertaSemDados');
+  if (aviso) aviso.style.display = 'none';
+
+  setTimeout(equalizarAlturasSimulacao, 50);
+  rolarParaResultados();
 }
 
 function mostrarVisualComparacao(resultados, tamanho) {
@@ -1096,6 +1113,11 @@ function inicializar() {
     }
 
     anunciarStatus('Simulador de algoritmos de disco carregado e pronto para uso');
+
+    window.addEventListener('resize', () => {
+      if (agendamentoEqualizacao) clearTimeout(agendamentoEqualizacao);
+      agendamentoEqualizacao = setTimeout(equalizarAlturasSimulacao, 150);
+    });
   } catch (error) {
     tratarErro(error, 'Inicialização');
   }
@@ -1105,4 +1127,44 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', inicializar);
 } else {
   inicializar();
+}
+
+function rolarParaResultados() {
+  const resultsDiv = document.getElementById('results');
+  if (!resultsDiv || resultsDiv.style.display === 'none') return;
+
+  setTimeout(() => {
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 150);
+}
+
+function equalizarAlturasSimulacao() {
+  const layout = document.querySelector('.simulacao-layout');
+  if (!layout) return;
+
+  const cards = Array.from(layout.querySelectorAll('.simulacao-card'));
+  if (cards.length < 2) return;
+
+  cards.forEach(card => {
+    card.style.minHeight = '';
+  });
+
+  const alturasVisiveis = cards
+    .filter(card => card.offsetParent !== null)
+    .map(card => card.getBoundingClientRect().height);
+
+  const maiorAltura = Math.max(0, ...alturasVisiveis);
+  if (maiorAltura === 0) return;
+
+  cards.forEach(card => {
+    if (card.offsetParent !== null) {
+      card.style.minHeight = `${maiorAltura}px`;
+    }
+  });
+}
+
+function resetarAlturaCardsSimulacao() {
+  document.querySelectorAll('.simulacao-card').forEach(card => {
+    card.style.minHeight = '';
+  });
 }

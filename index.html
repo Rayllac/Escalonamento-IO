@@ -38,13 +38,11 @@
               <div>
 
               <div class="form-group">
-                  <label for="fileInput">Carregar arquivo TXT:</label>
+                  <label for="fileInput">Carregar arquivo TXT     <span class="icon" title="Formato do arquivo:
+                    tamanho=NUM
+                    cabeca=NUM
+                    requisicoes=NUM1, NUM2, NUM3...">ℹ️</span></label>
                   <input type="file" id="fileInput" accept=".txt">
-              <span title="Formato do arquivo:
-                tamanho=NUM
-                cabeca=NUM
-                requisicoes=NUM1, NUM2, NUM3...">?</span>
-                </label>
               </div>
             </div>
           <div class="requests-display" id="requestsDisplay">
@@ -62,6 +60,7 @@
                 <div id="diskLine"></div>
                 <div id="head"></div>
               </div>
+            <div id="algoritmoDescricao" class="alg-desc"></div>
           </div>
 
           <div class="results" id="results" style="display: none;">

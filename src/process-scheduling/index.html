@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>scheduling-algo-sim</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Simulador de Algoritmos de Escalonamento de Processos</h1>
+
+    <!-- Entrada de processos -->
+    <section class="input-section">
+        <h2>Entrada de Processos</h2>
+        <form id="process-form">
+            <label>ID: <input type="text" id="pid"></label>
+            <label>Chegada: <input type="number" id="arrival"></label>
+            <label>Duração: <input type="number" id="burst"></label>
+            <label>Prioridade: <input type="number" id="priority"></label>
+            <button type="submit">Adicionar Processo</button>
+        </form>
+        <table id="process-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Chegada</th>
+                    <th>Duração</th>
+                    <th>Prioridade</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+        <!-- Simulações -->
+    <div class="simulations-container">
+        <!-- Simulação 1 -->
+        <section class="simulation-section">
+            <h2>Simulação 1</h2>
+            <label for="algorithm1">Algoritmo:</label>
+            <select id="algorithm1">
+                <option value="FIFO">FIFO</option>
+                <option value="SJF">SJF</option>
+                <option value="RoundRobin">Round Robin</option>
+                <option value="Prioridade">Prioridade</option>
+            </select>
+            <label for="quantum1">Quantum (apenas RR):</label>
+            <input type="number" id="quantum1" value="2" min="1">
+
+            <button id="simulate-btn-1">Rodar Simulação 1</button>
+            <canvas id="gantt1" width="600" height="120"></canvas>
+            <div id="results1"></div>
+        </section>
+
+        <!-- Simulação 2 -->
+        <section class="simulation-section">
+            <h2>Simulação 2</h2>
+            <label for="algorithm2">Algoritmo:</label>
+            <select id="algorithm2">
+                <option value="FIFO">FIFO</option>
+                <option value="SJF">SJF</option>
+                <option value="RoundRobin">Round Robin</option>
+                <option value="Prioridade">Prioridade</option>
+            </select>
+            <label for="quantum2">Quantum (apenas RR):</label>
+            <input type="number" id="quantum2" value="2" min="1">
+
+            <button id="simulate-btn-2">Rodar Simulação 2</button>
+            <canvas id="gantt2" width="600" height="120"></canvas>
+            <div id="results2"></div>
+        </section>
+    </div>
+
+    <!-- Comparação -->
+    <section class="compare-section">
+        <button id="compare-btn">Comparar Algoritmos</button>
+        <div id="comparison"></div>
+    </section>
+
+    <script src="algorithms.js"></script>
+    <script src="chart.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

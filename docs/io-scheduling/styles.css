@@ -17,7 +17,7 @@ body {
 
 body[data-page="simulacao"] {
   padding: 16px 12px 24px 12px;
-  background: #e9edf5;
+  background: #f8f9fa;
 }
 
 /* ========================
@@ -40,7 +40,7 @@ body[data-page="simulacao"] {
 body[data-page="simulacao"] .container {
   max-width: none;
   width: 100%;
-  background: #f3f6fb;
+  background: #fff;
   border-radius: 20px;
   padding: 32px 48px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
@@ -88,15 +88,16 @@ body[data-page="simulacao"] .controls {
 }
 
 body[data-page="simulacao"] .simulacao-panel {
-  background: transparent;
-  border: none;
-  padding: 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
   box-shadow: none;
 }
 
 body[data-page="simulacao"] .simulacao-panel:hover {
-  transform: none;
-  box-shadow: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .control-section h3 {

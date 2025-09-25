@@ -1,49 +1,8 @@
-const CONFIGURACOES = {
-  VELOCIDADE_ANIMACAO: 800,
-  DURACAO_TRANSICAO: 180,
-  TAMANHO_PADRAO: 50,
-  POSICAO_INICIAL_PADRAO: 25
-};
-
-const STORAGE_KEY = 'escalonamentoIOEstado';
-
-let estado = {
-  tamanho: CONFIGURACOES.TAMANHO_PADRAO,
-  posicaoInicial: CONFIGURACOES.POSICAO_INICIAL_PADRAO,
-  requisicoes: [],
-  animacaoAtiva: false
-};
+import { CONFIGURACOES } from './config.js';
+import { estado, salvarEstado, carregarEstado } from './state.js';
+import { algoritmoSSTF, algoritmoSCAN, algoritmoCSCAN, gerarComparacao } from './algorithms.js';
 
 let agendamentoEqualizacao = null;
-
-function salvarEstado() {
-  if (!window.localStorage) return;
-  const payload = {
-    tamanho: estado.tamanho,
-    posicaoInicial: estado.posicaoInicial,
-    requisicoes: estado.requisicoes
-  };
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  } catch (error) {
-    console.warn('Não foi possível salvar o estado:', error);
-  }
-}
-
-function carregarEstado() {
-  if (!window.localStorage) return;
-  try {
-    const bruto = window.localStorage.getItem(STORAGE_KEY);
-    if (!bruto) return;
-
-    const salvo = JSON.parse(bruto);
-    if (typeof salvo.tamanho === 'number') estado.tamanho = salvo.tamanho;
-    if (typeof salvo.posicaoInicial === 'number') estado.posicaoInicial = salvo.posicaoInicial;
-    if (Array.isArray(salvo.requisicoes)) estado.requisicoes = salvo.requisicoes;
-  } catch (error) {
-    console.warn('Não foi possível carregar o estado salvo:', error);
-  }
-}
 
 function sincronizarInputs() {
   const diskInput = document.getElementById('diskSize');
@@ -81,6 +40,8 @@ function addRequisicao() {
   }
 
   const input = document.getElementById('newRequest');
+  if (!input) return;
+
   const valor = parseInt(input.value);
   const tamanho = getTamanho();
 
@@ -241,7 +202,6 @@ function inicializarControles() {
     });
   }
 
-  // Input de tamanho do disco
   const inputTamanho = document.getElementById('diskSize');
   if (inputTamanho) {
     inputTamanho.addEventListener('change', () => {
@@ -253,7 +213,6 @@ function inicializarControles() {
     });
   }
 
-  // Input de posição inicial
   const inputPos = document.getElementById('initialPosition');
   if (inputPos) {
     inputPos.addEventListener('change', e => {
@@ -271,10 +230,38 @@ function inicializarControles() {
     inputFile.addEventListener('change', carregarDeArquivo);
   }
 
+  const btnAdd = document.getElementById('btnAddRequest');
+  if (btnAdd) btnAdd.addEventListener('click', addRequisicao);
+
+  const btnExample = document.getElementById('btnExampleRequests');
+  if (btnExample) btnExample.addEventListener('click', exemploAutomatico);
+
+  const btnClear = document.getElementById('btnClearRequests');
+  if (btnClear) btnClear.addEventListener('click', limparRequisicoes);
+
+  const btnSSTF = document.getElementById('btnRunSSTF');
+  if (btnSSTF) btnSSTF.addEventListener('click', () => runAlgoritmo('sstf'));
+
+  const btnSCAN = document.getElementById('btnRunSCAN');
+  if (btnSCAN) btnSCAN.addEventListener('click', () => runAlgoritmo('scan'));
+
+  const btnCSCAN = document.getElementById('btnRunCSCAN');
+  if (btnCSCAN) btnCSCAN.addEventListener('click', () => runAlgoritmo('cscan'));
+
+  const btnCompare = document.getElementById('btnCompareAll');
+  if (btnCompare) btnCompare.addEventListener('click', compararAlgoritmos);
+
+  const goToSimulation = document.getElementById('goToSimulation');
+  if (goToSimulation) {
+    goToSimulation.addEventListener('click', () => {
+      salvarEstado();
+      window.location.href = 'simulacao.html';
+    });
+  }
+
   atualizarRequisicoes();
   resetarVisualizacao();
 }
-
 
 function runAlgoritmo(tipo) {
   if (estado.animacaoAtiva) {
@@ -289,195 +276,23 @@ function runAlgoritmo(tipo) {
 
   const tamanho = getTamanho();
   const posicaoInicial = estado.posicaoInicial;
-  let resultado = null;
 
   estado.animacaoAtiva = true;
 
   const algoritmos = {
-    'sstf': () => algoritmoSSTF(estado.requisicoes, posicaoInicial),
-    'scan': () => algoritmoSCAN(estado.requisicoes, posicaoInicial, tamanho),
-    'cscan': () => algoritmoCSCAN(estado.requisicoes, posicaoInicial, tamanho)
+    sstf: () => algoritmoSSTF(estado.requisicoes, posicaoInicial),
+    scan: () => algoritmoSCAN(estado.requisicoes, posicaoInicial, tamanho),
+    cscan: () => algoritmoCSCAN(estado.requisicoes, posicaoInicial, tamanho)
   };
 
-  if (algoritmos[tipo]) {
-    resultado = algoritmos[tipo]();
+  const algoritmo = algoritmos[tipo];
+  if (algoritmo) {
+    const resultado = algoritmo();
     mostrarResultado(resultado);
   } else {
     alert('Algoritmo desconhecido.');
     estado.animacaoAtiva = false;
   }
-}
-
-function algoritmoSSTF(requisicoes, posicaoInicial) {
-  let pendentes = [...requisicoes];
-  let posicaoAtual = posicaoInicial;
-  let ordemAtendimento = [];
-  let movimentoTotal = 0;
-  let passos = [];
-
-  while (pendentes.length > 0) {
-    let maisProxima = pendentes[0];
-
-    for (const p of pendentes) {
-      if (Math.abs(p - posicaoAtual) < Math.abs(maisProxima - posicaoAtual)) {
-        maisProxima = p;
-      }
-    }
-
-    const deslocamento = Math.abs(maisProxima - posicaoAtual);
-    movimentoTotal += deslocamento;
-
-    passos.push({
-      de: posicaoAtual,
-      para: maisProxima,
-      distancia: deslocamento,
-      pendentesAntes: [...pendentes],
-      pendentesDepois: pendentes.filter(r => r !== maisProxima),
-      tipo: 'requisicao'
-    });
-
-    posicaoAtual = maisProxima;
-    ordemAtendimento.push(maisProxima);
-    pendentes = pendentes.filter(r => r !== maisProxima);
-  }
-
-  return {
-    nome: 'SSTF (Mais Próximo)',
-    explicacao: 'O algoritmo SSTF sempre seleciona, dentre as requisições pendentes, a que está mais próxima da posição atual da cabeça de leitura. Isso reduz o tempo de deslocamento em cada movimento, tornando-o eficiente em termos de busca individual.',
-    sequencia: ordemAtendimento,
-    movimentoTotal,
-    passos
-  };
-}
-
-function algoritmoSCAN(requisicoes, posicaoInicial, tamanho) {
-  let pendentes = [...requisicoes].sort((a, b) => a - b);
-  let posicaoAtual = posicaoInicial;
-  let ordemAtendimento = [];
-  let movimentoTotal = 0;
-  let passos = [];
-
-  const menores = pendentes.filter(r => r < posicaoAtual).sort((a, b) => b - a);
-  const maiores = pendentes.filter(r => r >= posicaoAtual).sort((a, b) => a - b);
-  const fila = [...maiores, ...menores];
-
-  for (const req of fila) {
-    const deslocamento = Math.abs(req - posicaoAtual);
-    movimentoTotal += deslocamento;
-
-    passos.push({
-      de: posicaoAtual,
-      para: req,
-      distancia: deslocamento,
-      pendentesAntes: [...pendentes],
-      pendentesDepois: pendentes.filter(r => r !== req),
-      tipo: 'requisicao'
-    });
-
-    posicaoAtual = req;
-    ordemAtendimento.push(req);
-    pendentes = pendentes.filter(r => r !== req);
-  }
-
-  return {
-    nome: 'SCAN (Elevador)',
-    explicacao: 'O SCAN é conhecido como algoritmo do elevador porque a cabeça do disco se movimenta em uma direção até atingir o final (ou a última requisição nesse sentido) e, em seguida, inverte o movimento. Durante a varredura, todas as requisições encontradas no caminho são atendidas na ordem em que aparecem.',
-    sequencia: ordemAtendimento,
-    movimentoTotal,
-    passos
-  };
-}
-
-function algoritmoCSCAN(requisicoes, posicaoInicial, tamanho) {
-  let pendentes = [...requisicoes].sort((a, b) => a - b);
-  let posicaoAtual = posicaoInicial;
-  let ordemAtendimento = [];
-  let movimentoTotal = 0;
-  let passos = [];
-
-  const maiores = pendentes.filter(r => r >= posicaoAtual).sort((a, b) => a - b);
-  const menores = pendentes.filter(r => r < posicaoAtual).sort((a, b) => a - b);
-
-  // Atende requisições maiores ou iguais
-  for (const req of maiores) {
-    const deslocamento = Math.abs(req - posicaoAtual);
-    movimentoTotal += deslocamento;
-    
-    passos.push({
-      de: posicaoAtual,
-      para: req,
-      distancia: deslocamento,
-      pendentesAntes: [...pendentes],
-      pendentesDepois: pendentes.filter(r => r !== req),
-      tipo: 'requisicao'
-    });
-    
-    posicaoAtual = req;
-    ordemAtendimento.push(req);
-    pendentes = pendentes.filter(r => r !== req);
-  }
-
-  // Se há requisições menores, volta ao início
-  if (menores.length > 0) {
-    // Move até o final se não estiver lá
-    if (posicaoAtual !== tamanho - 1) {
-      const deslocamento = tamanho - 1 - posicaoAtual;
-      movimentoTotal += deslocamento;
-      
-      passos.push({
-        de: posicaoAtual,
-        para: tamanho - 1,
-        distancia: deslocamento,
-        pendentesAntes: [...pendentes],
-        pendentesDepois: [...pendentes],
-        tipo: 'movimento'
-      });
-      
-      posicaoAtual = tamanho - 1;
-    }
-
-    // Volta ao início
-    const deslocamento = tamanho - 1;
-    movimentoTotal += deslocamento;
-    
-    passos.push({
-      de: posicaoAtual,
-      para: 0,
-      distancia: deslocamento,
-      pendentesAntes: [...pendentes],
-      pendentesDepois: [...pendentes],
-      tipo: 'movimento'
-    });
-    
-    posicaoAtual = 0;
-
-    // Atende requisições menores
-    for (const req of menores) {
-      const deslocamento = Math.abs(req - posicaoAtual);
-      movimentoTotal += deslocamento;
-      
-      passos.push({
-        de: posicaoAtual,
-        para: req,
-        distancia: deslocamento,
-        pendentesAntes: [...pendentes],
-        pendentesDepois: pendentes.filter(r => r !== req),
-        tipo: 'requisicao'
-      });
-      
-      posicaoAtual = req;
-      ordemAtendimento.push(req);
-      pendentes = pendentes.filter(r => r !== req);
-    }
-  }
-
-  return {
-    nome: 'C-SCAN (Circular SCAN)',
-    explicacao: 'O C-SCAN é uma variação do SCAN. Ele também percorre as requisições em apenas um sentido (por exemplo, da esquerda para a direita). Ao chegar ao final do disco, a cabeça retorna diretamente ao início, sem atender nenhuma requisição no caminho de volta. Em seguida, retoma o mesmo sentido de varredura.',
-    sequencia: ordemAtendimento,
-    movimentoTotal,
-    passos
-  };
 }
 
 function mostrarResultado(resultado) {
@@ -500,15 +315,14 @@ function mostrarResultado(resultado) {
   }, 100);
 
   const descDiv = document.getElementById('algoritmoDescricao');
-if (descDiv) {
-  descDiv.textContent = resultado.explicacao;
-  descDiv.classList.remove('show');
-  setTimeout(() => descDiv.classList.add('show'), 50);
-}
+  if (descDiv) {
+    descDiv.textContent = resultado.explicacao;
+    descDiv.classList.remove('show');
+    setTimeout(() => descDiv.classList.add('show'), 50);
+  }
 
   const aviso = document.getElementById('alertaSemDados');
   if (aviso) aviso.style.display = 'none';
-
 }
 
 function criarLayoutResultado(resultado) {
@@ -561,7 +375,6 @@ function animarAlgoritmo(resultado) {
   const head = document.getElementById('head');
   const line = viz.getBoundingClientRect();
 
-  // Elementos de interface
   const movimentoDiv = document.getElementById('movimentoAtual');
   const passoDiv = document.getElementById('passoAtual');
   const currentDiv = document.getElementById('currentRequest');
@@ -570,13 +383,15 @@ function animarAlgoritmo(resultado) {
 
   let indicePasso = 0;
   let movimentoAcumulado = 0;
-  let concluidas = [];
+  const concluidas = [];
 
-  head.style.left = `${(estado.posicaoInicial / tamanho) * line.width}px`;
-  head.style.transition = `left ${CONFIGURACOES.VELOCIDADE_ANIMACAO}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+  if (head && line.width > 0) {
+    head.style.left = `${(estado.posicaoInicial / tamanho) * line.width}px`;
+    head.style.transition = `left ${CONFIGURACOES.VELOCIDADE_ANIMACAO}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+  }
 
-  currentDiv.textContent = estado.posicaoInicial;
-  atualizarFilaPendente(estado.requisicoes, pendingDiv);
+  if (currentDiv) currentDiv.textContent = estado.posicaoInicial;
+  if (pendingDiv) atualizarFilaPendente(estado.requisicoes, pendingDiv);
 
   function executarProximoPasso() {
     if (indicePasso >= resultado.passos.length) {
@@ -586,25 +401,19 @@ function animarAlgoritmo(resultado) {
 
     const passo = resultado.passos[indicePasso];
     
-    // Atualizar contadores
-    passoDiv.textContent = indicePasso + 1;
+    if (passoDiv) passoDiv.textContent = indicePasso + 1;
     movimentoAcumulado += passo.distancia || 0;
     
-    // Animar contador de movimento
     animarContador(movimentoDiv, movimentoAcumulado);
-
-    // Mover cabeça do disco
     moverCabeca(head, passo.para, tamanho, line.width);
 
-    // Criar marcador visual se for requisição
     if (passo.tipo === 'requisicao') {
       criarMarcadorRequisicao(viz, passo.para, tamanho, line.width);
       concluidas.push(passo.para);
+      atualizarFilaPendente(passo.pendentesDepois, pendingDiv);
       atualizarFilaConcluidas(concluidas, completedDiv);
+      if (currentDiv) currentDiv.textContent = passo.para;
     }
-
-    currentDiv.textContent = passo.para;
-    atualizarFilaPendente(passo.pendentesDepois, pendingDiv);
 
     indicePasso++;
     setTimeout(executarProximoPasso, CONFIGURACOES.VELOCIDADE_ANIMACAO);
@@ -613,13 +422,14 @@ function animarAlgoritmo(resultado) {
   setTimeout(executarProximoPasso, 500);
 
   function finalizarAnimacao() {
-    currentDiv.textContent = "Finalizado";
-    pendingDiv.innerHTML = '<span class="pill success">Todas atendidas</span>';
+    if (currentDiv) currentDiv.textContent = 'Finalizado';
+    if (pendingDiv) pendingDiv.innerHTML = '<span class="pill green">Todas atendidas</span>';
     estado.animacaoAtiva = false;
   }
 }
 
 function moverCabeca(head, posicao, tamanho, larguraLinha) {
+  if (!head) return;
   const posicaoPixels = (posicao / tamanho) * larguraLinha;
   head.style.left = `${posicaoPixels}px`;
   
@@ -647,6 +457,7 @@ function criarMarcadorRequisicao(container, posicao, tamanho, larguraLinha) {
 }
 
 function animarContador(elemento, valorFinal) {
+  if (!elemento) return;
   const valorInicial = parseInt(elemento.textContent);
   const incremento = (valorFinal - valorInicial) / 20;
   let contador = 0;
@@ -664,6 +475,7 @@ function animarContador(elemento, valorFinal) {
 }
 
 function atualizarFilaPendente(pendentes, container) {
+  if (!container) return;
   if (!pendentes || pendentes.length === 0) {
     container.innerHTML = '<span class="pill muted">Vazia</span>';
   } else {
@@ -674,6 +486,7 @@ function atualizarFilaPendente(pendentes, container) {
 }
 
 function atualizarFilaConcluidas(concluidas, container) {
+  if (!container) return;
   if (concluidas.length === 0) {
     container.innerHTML = '<span class="pill muted">Nenhuma</span>';
   } else {
@@ -682,72 +495,6 @@ function atualizarFilaConcluidas(concluidas, container) {
       .join('');
   }
 }
-
-
-function carregarDeArquivo(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const dados = processarArquivo(e.target.result);
-      aplicarDadosCarregados(dados);
-      alert('Arquivo carregado com sucesso!');
-    } catch (error) {
-      alert('Erro ao carregar arquivo: ' + error.message);
-    }
-  };
-  reader.readAsText(file);
-}
-
-function processarArquivo(conteudo) {
-  const linhas = conteudo.split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(l => l && !l.startsWith('#'));
-
-  let dados = { tamanho: null, cabeca: null, requisicoes: [] };
-
-  for (const linha of linhas) {
-    if (linha.startsWith("tamanho=")) {
-      dados.tamanho = parseInt(linha.split("=")[1]);
-    } else if (linha.startsWith("cabeca=")) {
-      dados.cabeca = parseInt(linha.split("=")[1]);
-    } else if (linha.startsWith("requisicoes=")) {
-      dados.requisicoes = linha.split("=")[1]
-        .split(",")
-        .map(v => parseInt(v.trim()))
-        .filter(v => !isNaN(v));
-    }
-  }
-
-  return dados;
-}
-
-function aplicarDadosCarregados(dados) {
-  if (dados.tamanho !== null && dados.tamanho > 0) {
-    estado.tamanho = dados.tamanho;
-    const diskInput = document.getElementById("diskSize");
-    if (diskInput) diskInput.value = dados.tamanho;
-  }
-
-  if (dados.cabeca !== null && dados.cabeca >= 0) {
-    estado.posicaoInicial = Math.min(dados.cabeca, estado.tamanho - 1);
-    const headInput = document.getElementById("initialPosition");
-    if (headInput) headInput.value = estado.posicaoInicial;
-  }
-
-  if (dados.requisicoes.length > 0) {
-    estado.requisicoes = dados.requisicoes.filter(req => 
-      req >= 0 && req < estado.tamanho
-    );
-  }
-
-  atualizarRequisicoes();
-  resetarVisualizacao();
-  salvarEstado();
-}
-
 
 function compararAlgoritmos() {
   if (estado.animacaoAtiva) {
@@ -763,33 +510,19 @@ function compararAlgoritmos() {
   const tamanho = getTamanho();
   const posicaoInicial = estado.posicaoInicial;
 
-  const resultados = {
-    sstf: algoritmoSSTF(estado.requisicoes, posicaoInicial),
-    scan: algoritmoSCAN(estado.requisicoes, posicaoInicial, tamanho),
-    cscan: algoritmoCSCAN(estado.requisicoes, posicaoInicial, tamanho)
-  };
-
-  let melhores = [resultados.sstf];
-  let melhor = resultados.sstf;
-
-  for (let chave in resultados) {
-    const algoritmo = resultados[chave];
-
-    if (algoritmo.movimentoTotal < melhor.movimentoTotal) {
-      melhores = [algoritmo];
-      melhor = algoritmo;
-    } else if (algoritmo.movimentoTotal === melhor.movimentoTotal && algoritmo !== melhor) {
-      melhores.push(algoritmo); 
-    }
-  }
+  const { resultados, melhores } = gerarComparacao(estado.requisicoes, posicaoInicial, tamanho);
 
   mostrarComparacao(resultados, melhores);
   mostrarVisualComparacao(resultados, tamanho);
+  setTimeout(equalizarAlturasSimulacao, 50);
+  rolarParaResultados();
 }
 
-const mostrarComparacao = (resultados, melhores) =>  {
+function mostrarComparacao(resultados, melhores) {
   const container = document.getElementById('algoritmoresults');
   const resultsDiv = document.getElementById('results');
+
+  if (!container || !resultsDiv) return;
 
   const tabela = `
     <div class="comparison-header">
@@ -838,9 +571,6 @@ const mostrarComparacao = (resultados, melhores) =>  {
 
   const aviso = document.getElementById('alertaSemDados');
   if (aviso) aviso.style.display = 'none';
-
-  setTimeout(equalizarAlturasSimulacao, 50);
-  rolarParaResultados();
 }
 
 function mostrarVisualComparacao(resultados, tamanho) {
@@ -872,10 +602,9 @@ function mostrarVisualComparacao(resultados, tamanho) {
     </div>
   `;
 
-  // Animar cada algoritmo com delay
-  setTimeout(() => desenharSequencia(resultados.sstf.sequencia, "head-sstf", tamanho), 1000);
-  setTimeout(() => desenharSequencia(resultados.scan.sequencia, "head-scan", tamanho), 1000);
-  setTimeout(() => desenharSequencia(resultados.cscan.sequencia, "head-cscan", tamanho), 1000);
+  setTimeout(() => desenharSequencia(resultados.sstf.sequencia, 'head-sstf', tamanho), 0);
+  setTimeout(() => desenharSequencia(resultados.scan.sequencia, 'head-scan', tamanho), 250);
+  setTimeout(() => desenharSequencia(resultados.cscan.sequencia, 'head-cscan', tamanho), 500);
 
   const descDiv = document.getElementById('algoritmoDescricao');
   if (descDiv) {
@@ -886,20 +615,18 @@ function mostrarVisualComparacao(resultados, tamanho) {
 
 function desenharSequencia(sequencia, headId, tamanho) {
   const head = document.getElementById(headId);
-  const wrapper = head.parentElement;
+  const wrapper = head?.parentElement;
   
   if (!head || !wrapper) return;
   
   const line = wrapper.getBoundingClientRect();
   
-  // Posição inicial
   head.style.left = `${(estado.posicaoInicial / tamanho) * line.width}px`;
   head.style.transition = `left ${CONFIGURACOES.VELOCIDADE_ANIMACAO * 0.6}ms ease-in-out`;
   
-  // Criar marcadores para cada posição
   sequencia.forEach((req, index) => {
-    const marcador = document.createElement("div");
-    marcador.className = "request-label comparison-label";
+    const marcador = document.createElement('div');
+    marcador.className = 'request-label comparison-label';
     marcador.style.left = `${(req / tamanho) * line.width}px`;
     marcador.textContent = req;
     marcador.style.opacity = '0';
@@ -908,14 +635,12 @@ function desenharSequencia(sequencia, headId, tamanho) {
     
     wrapper.appendChild(marcador);
     
-    // Animar aparição dos marcadores
     setTimeout(() => {
       marcador.style.opacity = '1';
       marcador.style.transform = 'translateX(-50%) scale(1)';
     }, index * 100);
   });
-
-  // Animar movimento da cabeça
+  
   let indice = 0;
   function moverProximo() {
     if (indice >= sequencia.length) return;
@@ -925,7 +650,6 @@ function desenharSequencia(sequencia, headId, tamanho) {
     
     head.style.left = `${posicaoPixels}px`;
     
-    // Destacar marcador atual
     const marcadores = wrapper.querySelectorAll('.comparison-label');
     if (marcadores[indice]) {
       marcadores[indice].style.backgroundColor = '#28a745';
@@ -938,95 +662,79 @@ function desenharSequencia(sequencia, headId, tamanho) {
         }
       }, CONFIGURACOES.DURACAO_TRANSICAO);
     }
-    
+
     indice++;
-    setTimeout(moverProximo, CONFIGURACOES.VELOCIDADE_ANIMACAO * 2);
+    setTimeout(moverProximo, CONFIGURACOES.VELOCIDADE_ANIMACAO * 0.6);
   }
-  
+
   setTimeout(moverProximo, 300);
 }
 
+function carregarDeArquivo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
 
-function calcularEstatisticas(resultados) {
-  const movimentos = Object.values(resultados).map(r => r.movimentoTotal);
-  const minimo = Math.min(...movimentos);
-  const maximo = Math.max(...movimentos);
-  let soma = 0;
-  for (const m of movimentos) {
-    soma += m;
-  }
-  const media = soma / movimentos.length;
-  
-  return {
-    minimo,
-    maximo,
-    media: Math.round(media * 100) / 100,
-    economia: Math.round(((maximo - minimo) / maximo) * 100)
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const dados = processarArquivo(e.target.result);
+      aplicarDadosCarregados(dados);
+      alert('Arquivo carregado com sucesso!');
+    } catch (error) {
+      alert('Erro ao carregar arquivo: ' + error.message);
+    }
   };
+  reader.readAsText(file);
 }
 
-function exportarResultados(resultados) {
-  const estatisticas = calcularEstatisticas(resultados);
-  
-  const dados = {
-    configuracao: {
-      tamanho: estado.tamanho,
-      posicaoInicial: estado.posicaoInicial,
-      requisicoes: estado.requisicoes
-    },
-    resultados: Object.values(resultados).map(r => ({
-      algoritmo: r.nome,
-      movimentoTotal: r.movimentoTotal,
-      sequencia: r.sequencia
-    })),
-    estatisticas
-  };
-  
-  const json = JSON.stringify(dados, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `disk_scheduler_results_${new Date().getTime()}.json`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+function processarArquivo(conteudo) {
+  const linhas = conteudo.split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(l => l && !l.startsWith('#'));
+
+  const dados = { tamanho: null, cabeca: null, requisicoes: [] };
+
+  for (const linha of linhas) {
+    if (linha.startsWith('tamanho=')) {
+      dados.tamanho = parseInt(linha.split('=')[1]);
+    } else if (linha.startsWith('cabeca=')) {
+      dados.cabeca = parseInt(linha.split('=')[1]);
+    } else if (linha.startsWith('requisicoes=')) {
+      dados.requisicoes = linha.split('=')[1]
+        .split(',')
+        .map(v => parseInt(v.trim()))
+        .filter(v => !Number.isNaN(v));
+    }
+  }
+
+  return dados;
 }
 
+function aplicarDadosCarregados(dados) {
+  if (dados.tamanho !== null && dados.tamanho > 0) {
+    estado.tamanho = dados.tamanho;
+    const diskInput = document.getElementById('diskSize');
+    if (diskInput) diskInput.value = dados.tamanho;
+  }
 
-function validarConfiguracao() {
-  const erros = [];
-  
-  if (estado.tamanho < 1) {
-    erros.push('Tamanho do disco deve ser maior que 0');
+  if (dados.cabeca !== null && dados.cabeca >= 0) {
+    estado.posicaoInicial = Math.min(dados.cabeca, estado.tamanho - 1);
+    const headInput = document.getElementById('initialPosition');
+    if (headInput) headInput.value = estado.posicaoInicial;
   }
-  
-  if (estado.posicaoInicial < 0 || estado.posicaoInicial >= estado.tamanho) {
-    erros.push('Posição inicial deve estar dentro do disco');
+
+  if (dados.requisicoes.length > 0) {
+    estado.requisicoes = dados.requisicoes.filter(req => 
+      req >= 0 && req < estado.tamanho
+    );
   }
-  
-  if (estado.requisicoes.length === 0) {
-    erros.push('É necessário pelo menos uma requisição');
-  }
-  
-  const requisicoesInvalidas = estado.requisicoes.filter(r => 
-    r < 0 || r >= estado.tamanho
-  );
-  
-  if (requisicoesInvalidas.length > 0) {
-    erros.push(`Requisições inválidas: ${requisicoesInvalidas.join(', ')}`);
-  }
-  
-  return {
-    valida: erros.length === 0,
-    erros
-  };
+
+  atualizarRequisicoes();
+  resetarVisualizacao();
+  salvarEstado();
 }
 
 function adicionarAcessibilidade() {
-
   const elementos = {
     'diskSize': 'Tamanho do disco em setores',
     'initialPosition': 'Posição inicial da cabeça do disco',
@@ -1040,7 +748,6 @@ function adicionarAcessibilidade() {
     }
   });
   
-  // Adicionar indicadores de status para leitores de tela
   const statusDiv = document.createElement('div');
   statusDiv.id = 'statusAria';
   statusDiv.setAttribute('aria-live', 'polite');
@@ -1102,6 +809,45 @@ function configurarPaginaSimulacao() {
   }
 }
 
+function rolarParaResultados() {
+  const resultsDiv = document.getElementById('results');
+  if (!resultsDiv || resultsDiv.style.display === 'none') return;
+
+  setTimeout(() => {
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 150);
+}
+
+function equalizarAlturasSimulacao() {
+  const layout = document.querySelector('.simulacao-layout');
+  if (!layout) return;
+
+  const cards = Array.from(layout.querySelectorAll('.simulacao-card'));
+  if (cards.length < 2) return;
+
+  cards.forEach(card => {
+    card.style.minHeight = '';
+  });
+
+  const maiorAltura = Math.max(0, ...cards
+    .filter(card => card.offsetParent !== null)
+    .map(card => card.getBoundingClientRect().height));
+
+  if (maiorAltura === 0) return;
+
+  cards.forEach(card => {
+    if (card.offsetParent !== null) {
+      card.style.minHeight = `${maiorAltura}px`;
+    }
+  });
+}
+
+function resetarAlturaCardsSimulacao() {
+  document.querySelectorAll('.simulacao-card').forEach(card => {
+    card.style.minHeight = '';
+  });
+}
+
 function inicializar() {
   try {
     estado.animacaoAtiva = false;
@@ -1129,48 +875,6 @@ function inicializar() {
   }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', inicializar);
-} else {
+export function inicializarAplicacao() {
   inicializar();
-}
-
-function rolarParaResultados() {
-  const resultsDiv = document.getElementById('results');
-  if (!resultsDiv || resultsDiv.style.display === 'none') return;
-
-  setTimeout(() => {
-    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 150);
-}
-
-function equalizarAlturasSimulacao() {
-  const layout = document.querySelector('.simulacao-layout');
-  if (!layout) return;
-
-  const cards = Array.from(layout.querySelectorAll('.simulacao-card'));
-  if (cards.length < 2) return;
-
-  cards.forEach(card => {
-    card.style.minHeight = '';
-  });
-
-  const alturasVisiveis = cards
-    .filter(card => card.offsetParent !== null)
-    .map(card => card.getBoundingClientRect().height);
-
-  const maiorAltura = Math.max(0, ...alturasVisiveis);
-  if (maiorAltura === 0) return;
-
-  cards.forEach(card => {
-    if (card.offsetParent !== null) {
-      card.style.minHeight = `${maiorAltura}px`;
-    }
-  });
-}
-
-function resetarAlturaCardsSimulacao() {
-  document.querySelectorAll('.simulacao-card').forEach(card => {
-    card.style.minHeight = '';
-  });
 }

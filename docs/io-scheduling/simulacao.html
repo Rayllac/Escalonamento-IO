@@ -40,10 +40,10 @@
       <div class="control-section simulacao-panel">
         <h3>Escolha o algoritmo</h3>
         <div class="page-actions">
-          <button onclick="runAlgoritmo('sstf')" class="sucess">SSTF - Mais Próximo</button>
-          <button onclick="runAlgoritmo('scan')" class="sucess">SCAN - Elevador</button>
-          <button onclick="runAlgoritmo('cscan')" class="sucess">C-SCAN - Circular</button>
-          <button onclick="compararAlgoritmos()" class="sucess">Comparar Todos</button>
+          <button class="sucess" id="btnRunSSTF">SSTF - Mais Próximo</button>
+          <button class="sucess" id="btnRunSCAN">SCAN - Elevador</button>
+          <button class="sucess" id="btnRunCSCAN">C-SCAN - Circular</button>
+          <button class="sucess" id="btnCompareAll">Comparar Todos</button>
         </div>
 
         <div id="alertaSemDados" class="alert-info">
@@ -69,6 +69,6 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -786,11 +786,32 @@ button:disabled {
   padding: 10px;
   background: #f8f9fa;
   border-radius: 6px;
+  justify-content: center;
+}
+
+.disk-visualization .compare-row {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.disk-visualization .diskLineWrapper {
+  background: transparent;
+  border: none;
+}
+
+.disk-visualization .alg-label {
+  width: auto;
+  text-align: center;
+  font-size: 14px;
 }
 
 .alg-label {
   font-weight: 700;
-  width: 80px;
+  width: 90px;
   text-align: right;
   color: #495057;
   font-size: 13px;
@@ -798,11 +819,14 @@ button:disabled {
 
 .diskLineWrapper {
   position: relative;
-  flex: 1;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 520px;
   height: 60px;
   background: #fff;
   border-radius: 4px;
   border: 1px solid #e9ecef;
+  margin: 0 auto;
 }
 
 /* ========================
@@ -1858,9 +1882,14 @@ button:disabled {
 ========================= */
 .disk-visualization {
   position: relative;
-  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  height: auto;
   margin-top: 60px;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 #diskLine,
@@ -2194,6 +2223,20 @@ button:disabled {
     width: auto;
     text-align: center;
   }
+
+  .disk-visualization {
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .disk-visualization .compare-row {
+    max-width: none;
+  }
+
+  .disk-visualization .diskLineWrapper {
+    max-width: none;
+    width: 100%;
+  }
 }
 
 /* ========================
@@ -2281,11 +2324,12 @@ button:disabled {
   padding: 10px;
   background: #f8f9fa;
   border-radius: 6px;
+  justify-content: center;
 }
 
 .alg-label {
   font-weight: 700;
-  width: 80px;
+  width: 90px;
   text-align: right;
   color: #495057;
   font-size: 13px;
@@ -2293,11 +2337,14 @@ button:disabled {
 
 .diskLineWrapper {
   position: relative;
-  flex: 1;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 520px;
   height: 60px;
   background: #fff;
   border-radius: 4px;
   border: 1px solid #e9ecef;
+  margin: 0 auto;
 }
 
 /* ========================
@@ -2450,8 +2497,8 @@ button:disabled {
   }
   
   .disk-visualization {
-    height: 70px;
-    margin: 30px 0 20px 0;
+    height: auto;
+    margin: 24px 0 20px 0;
   }
   
   button {
@@ -2606,4 +2653,16 @@ button:disabled {
 .simulacao-layout #algoritmoresults::-webkit-scrollbar-track {
   background: rgba(233, 236, 239, 0.5);
   border-radius: 3px;
+}
+
+/* Ajustes específicos da visualização comparativa */
+.disk-visualization .compare-row {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.disk-visualization .diskLineWrapper {
+  background: transparent;
+  border: none;
 }

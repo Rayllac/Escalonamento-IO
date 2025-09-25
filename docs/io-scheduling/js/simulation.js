@@ -345,9 +345,9 @@ function mostrarVisualComparacao(resultados, tamanho) {
     </div>
   `;
 
-  setTimeout(() => desenharSequencia(resultados.sstf.sequencia, 'head-sstf', tamanho), 0);
-  setTimeout(() => desenharSequencia(resultados.scan.sequencia, 'head-scan', tamanho), 250);
-  setTimeout(() => desenharSequencia(resultados.cscan.sequencia, 'head-cscan', tamanho), 500);
+  setTimeout(() => desenharSequencia(resultados.sstf.sequencia, 'head-sstf', tamanho), 1000);
+  setTimeout(() => desenharSequencia(resultados.scan.sequencia, 'head-scan', tamanho), 1000);
+  setTimeout(() => desenharSequencia(resultados.cscan.sequencia, 'head-cscan', tamanho), 1000);
 
   const descDiv = document.getElementById('algoritmoDescricao');
   if (descDiv) {
@@ -407,7 +407,7 @@ function desenharSequencia(sequencia, headId, tamanho) {
     }
 
     indice++;
-    setTimeout(moverProximo, CONFIGURACOES.VELOCIDADE_ANIMACAO * 0.6);
+    setTimeout(moverProximo, CONFIGURACOES.VELOCIDADE_ANIMACAO * 2);
   }
 
   setTimeout(moverProximo, 300);

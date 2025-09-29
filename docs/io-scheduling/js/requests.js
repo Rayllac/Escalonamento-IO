@@ -1,5 +1,6 @@
 import { CONFIGURACOES } from './config.js';
 import { estado, salvarEstado } from './state.js';
+import { criarReguaDisco, calcularDimensoesLinha, calcularPosicaoPixels } from './visualization.js';
 
 function sincronizarInputs() {
   const diskInput = document.getElementById('diskSize');
@@ -155,14 +156,26 @@ function resetarVisualizacao() {
   const viz = document.querySelector('.disk-visualization');
   if (!viz) return;
 
-  viz.innerHTML = `<div id="diskLine"></div><div id="head"></div>`;
+  viz.classList.add('single-view');
+  viz.classList.remove('comparison-view');
 
-  const head = document.getElementById('head');
-  const line = viz.getBoundingClientRect();
-  
-  if (head && line.width > 0) {
-    head.style.left = `${(estado.posicaoInicial / estado.tamanho) * line.width}px`;
-    head.style.transition = `left ${CONFIGURACOES.DURACAO_TRANSICAO}ms ease-in-out`;
+  const tamanho = estado.tamanho || CONFIGURACOES.TAMANHO_PADRAO;
+  const { wrapper, head, diskLine } = criarReguaDisco({
+    container: viz,
+    titulo: 'Visualização do Disco',
+    tamanho,
+    headId: 'head',
+    modo: 'single'
+  });
+
+  if (!wrapper || !head || !diskLine) return;
+
+  const { largura, offset } = calcularDimensoesLinha(wrapper, diskLine);
+  head.style.transition = `left ${CONFIGURACOES.DURACAO_TRANSICAO}ms ease-in-out`;
+
+  if (largura > 0) {
+    const posicaoInicial = calcularPosicaoPixels(estado.posicaoInicial, tamanho, largura, offset);
+    head.style.left = `${posicaoInicial}px`;
   }
 }
 

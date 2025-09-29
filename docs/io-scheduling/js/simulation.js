@@ -2,6 +2,7 @@ import { CONFIGURACOES } from './config.js';
 import { estado } from './state.js';
 import { algoritmoSSTF, algoritmoSCAN, algoritmoCSCAN, gerarComparacao } from './algorithms.js';
 import { getTamanho } from './requests.js';
+import { criarReguaDisco, calcularDimensoesLinha, calcularPosicaoPixels } from './visualization.js';
 
 let agendamentoEqualizacao = null;
 
@@ -113,10 +114,25 @@ function animarAlgoritmo(resultado) {
   const viz = document.querySelector('.disk-visualization');
   if (!viz) return;
 
-  viz.innerHTML = `<div id="diskLine"></div><div id="head"></div>`;
+  viz.classList.add('single-view');
+  viz.classList.remove('comparison-view');
+
+  const { wrapper, head, diskLine } = criarReguaDisco({
+    container: viz,
+    titulo: resultado.nome,
+    tamanho,
+    headId: 'head',
+    modo: 'single'
+  });
+
+  if (!wrapper || !head || !diskLine) return;
   
-  const head = document.getElementById('head');
-  const line = viz.getBoundingClientRect();
+  let { largura: larguraLinha, offset } = calcularDimensoesLinha(wrapper, diskLine);
+  head.style.transition = `left ${CONFIGURACOES.VELOCIDADE_ANIMACAO}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+  if (larguraLinha > 0) {
+    const posInicial = calcularPosicaoPixels(estado.posicaoInicial, tamanho, larguraLinha, offset);
+    head.style.left = `${posInicial}px`;
+  }
 
   const movimentoDiv = document.getElementById('movimentoAtual');
   const passoDiv = document.getElementById('passoAtual');
@@ -128,11 +144,6 @@ function animarAlgoritmo(resultado) {
   let movimentoAcumulado = 0;
   const concluidas = [];
 
-  if (head && line.width > 0) {
-    head.style.left = `${(estado.posicaoInicial / tamanho) * line.width}px`;
-    head.style.transition = `left ${CONFIGURACOES.VELOCIDADE_ANIMACAO}ms cubic-bezier(0.4, 0, 0.2, 1)`;
-  }
-
   if (currentDiv) currentDiv.textContent = estado.posicaoInicial;
   if (pendingDiv) atualizarFilaPendente(estado.requisicoes, pendingDiv);
 
@@ -142,16 +153,18 @@ function animarAlgoritmo(resultado) {
       return;
     }
 
+    ({ largura: larguraLinha, offset } = calcularDimensoesLinha(wrapper, diskLine));
+
     const passo = resultado.passos[indicePasso];
     
     if (passoDiv) passoDiv.textContent = indicePasso + 1;
     movimentoAcumulado += passo.distancia || 0;
     
     animarContador(movimentoDiv, movimentoAcumulado);
-    moverCabeca(head, passo.para, tamanho, line.width);
+    moverCabeca(head, passo.para, tamanho, larguraLinha, offset);
 
     if (passo.tipo === 'requisicao') {
-      criarMarcadorRequisicao(viz, passo.para, tamanho, line.width);
+      criarMarcadorRequisicao(wrapper, passo.para, tamanho, larguraLinha, offset);
       concluidas.push(passo.para);
       atualizarFilaPendente(passo.pendentesDepois, pendingDiv);
       atualizarFilaConcluidas(concluidas, completedDiv);
@@ -171,9 +184,9 @@ function animarAlgoritmo(resultado) {
   }
 }
 
-function moverCabeca(head, posicao, tamanho, larguraLinha) {
-  if (!head) return;
-  const posicaoPixels = (posicao / tamanho) * larguraLinha;
+function moverCabeca(head, posicao, tamanho, larguraLinha, offset = 0) {
+  if (!head || larguraLinha <= 0) return;
+  const posicaoPixels = calcularPosicaoPixels(posicao, tamanho, larguraLinha, offset);
   head.style.left = `${posicaoPixels}px`;
   
   head.style.transform = 'scale(1.2)';
@@ -182,10 +195,11 @@ function moverCabeca(head, posicao, tamanho, larguraLinha) {
   }, CONFIGURACOES.VELOCIDADE_ANIMACAO / 2);
 }
 
-function criarMarcadorRequisicao(container, posicao, tamanho, larguraLinha) {
+function criarMarcadorRequisicao(container, posicao, tamanho, larguraLinha, offset = 0) {
+  if (!container || larguraLinha <= 0) return;
   const marcador = document.createElement('div');
   marcador.className = 'request-label';
-  marcador.style.left = `${(posicao / tamanho) * larguraLinha}px`;
+  marcador.style.left = `${calcularPosicaoPixels(posicao, tamanho, larguraLinha, offset)}px`;
   marcador.textContent = posicao;
   marcador.style.opacity = '0';
   marcador.style.transform = 'scale(0.5)';
@@ -320,30 +334,37 @@ function mostrarVisualComparacao(resultados, tamanho) {
   const viz = document.querySelector('.disk-visualization');
   if (!viz) return;
   
-  viz.innerHTML = `
-    <div class="compare-header">Visualização Comparativa</div>
-    <div class="compare-row">
-      <div class="alg-label">SSTF</div>
-      <div class="diskLineWrapper">
-        <div class="diskLine"></div>
-        <div class="head" id="head-sstf"></div>
-      </div>
-    </div>
-    <div class="compare-row">
-      <div class="alg-label">SCAN</div>
-      <div class="diskLineWrapper">
-        <div class="diskLine"></div>
-        <div class="head" id="head-scan"></div>
-      </div>
-    </div>
-    <div class="compare-row">
-      <div class="alg-label">C-SCAN</div>
-      <div class="diskLineWrapper">
-        <div class="diskLine"></div>
-        <div class="head" id="head-cscan"></div>
-      </div>
-    </div>
+  viz.classList.add('comparison-view');
+  viz.classList.remove('single-view');
+
+  viz.innerHTML = '';
+
+  const headerCard = document.createElement('div');
+  headerCard.classList.add('disk-info-card', 'compare-header');
+  headerCard.innerHTML = `
+    <h3>Visualização Comparativa</h3>
   `;
+  viz.appendChild(headerCard);
+
+  const blocos = [
+    { chave: 'sstf', headId: 'head-sstf' },
+    { chave: 'scan', headId: 'head-scan' },
+    { chave: 'cscan', headId: 'head-cscan' }
+  ];
+
+  blocos.forEach(({ chave, headId }) => {
+    const linha = document.createElement('div');
+    linha.classList.add('compare-row');
+    viz.appendChild(linha);
+
+    criarReguaDisco({
+      container: linha,
+      titulo: resultados[chave].nome,
+      tamanho,
+      headId,
+      modo: 'compare'
+    });
+  });
 
   setTimeout(() => desenharSequencia(resultados.sstf.sequencia, 'head-sstf', tamanho), 1000);
   setTimeout(() => desenharSequencia(resultados.scan.sequencia, 'head-scan', tamanho), 1000);
@@ -359,46 +380,51 @@ function mostrarVisualComparacao(resultados, tamanho) {
 function desenharSequencia(sequencia, headId, tamanho) {
   const head = document.getElementById(headId);
   const wrapper = head?.parentElement;
-  
   if (!head || !wrapper) return;
-  
-  const line = wrapper.getBoundingClientRect();
-  
-  head.style.left = `${(estado.posicaoInicial / tamanho) * line.width}px`;
+
+  const diskLine = wrapper.querySelector('.diskLine');
+  if (!diskLine) return;
+
+  let { largura, offset } = calcularDimensoesLinha(wrapper, diskLine);
+
+  const posInicial = calcularPosicaoPixels(estado.posicaoInicial, tamanho, largura, offset);
+  head.style.left = `${posInicial}px`;
   head.style.transition = `left ${CONFIGURACOES.VELOCIDADE_ANIMACAO * 0.6}ms ease-in-out`;
-  
+
   sequencia.forEach((req, index) => {
     const marcador = document.createElement('div');
     marcador.className = 'request-label comparison-label';
-    marcador.style.left = `${(req / tamanho) * line.width}px`;
+    marcador.style.left = `${calcularPosicaoPixels(req, tamanho, largura, offset)}px`;
     marcador.textContent = req;
     marcador.style.opacity = '0';
     marcador.style.transform = 'translateX(-50%) scale(0.85)';
     marcador.style.transition = `all ${CONFIGURACOES.DURACAO_TRANSICAO}ms ease-out`;
-    
+
     wrapper.appendChild(marcador);
-    
+
     setTimeout(() => {
       marcador.style.opacity = '1';
       marcador.style.transform = 'translateX(-50%) scale(1)';
     }, index * 100);
   });
-  
+
   let indice = 0;
   function moverProximo() {
     if (indice >= sequencia.length) return;
-    
+
+    ({ largura, offset } = calcularDimensoesLinha(wrapper, diskLine));
+
     const posicao = sequencia[indice];
-    const posicaoPixels = (posicao / tamanho) * line.width;
-    
+    const posicaoPixels = calcularPosicaoPixels(posicao, tamanho, largura, offset);
+
     head.style.left = `${posicaoPixels}px`;
-    
+
     const marcadores = wrapper.querySelectorAll('.comparison-label');
     if (marcadores[indice]) {
       marcadores[indice].style.backgroundColor = '#28a745';
       marcadores[indice].style.color = 'white';
       marcadores[indice].style.transform = 'translateX(-50%) scale(1.1)';
-      
+
       setTimeout(() => {
         if (marcadores[indice]) {
           marcadores[indice].style.transform = 'translateX(-50%) scale(1)';

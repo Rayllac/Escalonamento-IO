@@ -177,6 +177,15 @@ function resetarVisualizacao() {
     const posicaoInicial = calcularPosicaoPixels(estado.posicaoInicial, tamanho, largura, offset);
     head.style.left = `${posicaoInicial}px`;
   }
+
+  const currentDiv = document.getElementById('currentRequest');
+  if (currentDiv) {
+    const badge = document.createElement('span');
+    badge.className = 'pill current status-badge';
+    badge.textContent = estado.posicaoInicial;
+    currentDiv.innerHTML = '';
+    currentDiv.appendChild(badge);
+  }
 }
 
 function ocultarResultados() {

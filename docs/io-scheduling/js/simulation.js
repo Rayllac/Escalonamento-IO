@@ -144,8 +144,18 @@ function animarAlgoritmo(resultado) {
   let movimentoAcumulado = 0;
   const concluidas = [];
 
-  if (currentDiv) currentDiv.textContent = estado.posicaoInicial;
+  const atualizarPosicaoAtual = (valor, tipo = 'numero') => {
+    if (!currentDiv) return;
+    const badge = document.createElement('span');
+    badge.className = `pill ${tipo === 'final' ? 'green status-badge' : 'current status-badge'}`;
+    badge.textContent = valor;
+    currentDiv.innerHTML = '';
+    currentDiv.appendChild(badge);
+  };
+
   if (pendingDiv) atualizarFilaPendente(estado.requisicoes, pendingDiv);
+
+  atualizarPosicaoAtual(estado.posicaoInicial);
 
   function executarProximoPasso() {
     if (indicePasso >= resultado.passos.length) {
@@ -168,7 +178,7 @@ function animarAlgoritmo(resultado) {
       concluidas.push(passo.para);
       atualizarFilaPendente(passo.pendentesDepois, pendingDiv);
       atualizarFilaConcluidas(concluidas, completedDiv);
-      if (currentDiv) currentDiv.textContent = passo.para;
+      atualizarPosicaoAtual(passo.para);
     }
 
     indicePasso++;
@@ -178,7 +188,7 @@ function animarAlgoritmo(resultado) {
   setTimeout(executarProximoPasso, 500);
 
   function finalizarAnimacao() {
-    if (currentDiv) currentDiv.textContent = 'Finalizado';
+    atualizarPosicaoAtual('Finalizado', 'final');
     if (pendingDiv) pendingDiv.innerHTML = '<span class="pill green">Todas atendidas</span>';
     estado.animacaoAtiva = false;
   }
